@@ -127,6 +127,16 @@
       background: #FFC222;
     }
 
+    /* Force dark tables (some hosts/themes paint table rows white) */
+    main table { background: transparent !important; color: #F8FAFC; }
+    main tbody tr { background: transparent !important; }
+    main tbody tr:nth-child(even) { background: rgba(27, 34, 52, 0.55) !important; }
+    main tbody tr:hover { background: rgba(255, 194, 34, 0.07) !important; }
+    main thead tr, main thead th { background: #1B2234 !important; }
+    main tbody td { background: transparent !important; }
+    main td, main th { border-color: #262F45; }
+    main td:not([class*="text-"]) { color: #F8FAFC; }
+
     @keyframes pulseRec {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.35; transform: scale(0.92); }
@@ -792,6 +802,54 @@
                 <button onclick="exportRankingsExcel()" class="bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition shadow">
                   ⬇ Export Rankings (Excel)
                 </button>
+              </div>
+            </div>
+
+            <div id="rankingsTop3Podium" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead id="rankingsTableHead"></thead>
+                <tbody id="rankingsTableBody" class="divide-y divide-canvas-border"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- =============================================================
+             BOARD SUB-TAB 4: UNLIMITED TASKS MANAGER
+             ============================================================= -->
+        <div id="bpanel-tasks" class="hidden space-y-4">
+          <div class="bg-canvas-panel border border-canvas-border rounded-2xl p-4 sm:p-5 space-y-4">
+            <div class="flex items-center justify-between gap-2 border-b border-canvas-border pb-3">
+              <div>
+                <span class="font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-canvas-gold/15 text-canvas-gold border border-canvas-gold/30">TASK MANAGER</span>
+                <h3 class="text-base sm:text-lg font-extrabold text-white mt-1">Create &amp; Edit Tasks</h3>
+              </div>
+              <span id="tasksTotalCountBadge" class="font-mono text-xs font-bold text-canvas-blue">0 Tasks</span>
+            </div>
+
+            <div class="bg-canvas-bg border border-canvas-gold/30 rounded-xl p-4 space-y-3">
+              <div class="text-xs font-mono font-bold uppercase text-canvas-gold">➕ Add New Task</div>
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div class="md:col-span-4">
+                  <label class="block text-[10px] font-mono text-slate-400 mb-1">Title *</label>
+                  <input id="newTaskTitleInput" type="text" placeholder="Task 04: ..." class="w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
+                </div>
+                <div class="md:col-span-4">
+                  <label class="block text-[10px] font-mono text-slate-400 mb-1">Brief</label>
+                  <input id="newTaskBriefInput" type="text" placeholder="What members should deliver" class="w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs text-white focus:outline-none" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-[10px] font-mono text-slate-400 mb-1">Score Out Of</label>
+                  <input id="newTaskMaxInput" type="number" value="100" class="w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-[10px] font-mono text-slate-400 mb-1">Deadline</label>
+                  <input id="newTaskDeadlineInput" type="datetime-local" class="w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-2.5 py-2 text-xs font-mono text-white focus:outline-none" />
+                </div>
+              </div>
+              <div class="flex justify-end">
+                <button onclick="createNewTaskItem()" class="bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs px-5 py-2 rounded-xl transition">Create Task</button>
               </div>
             </div>
 

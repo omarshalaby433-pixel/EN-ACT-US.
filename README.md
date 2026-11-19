@@ -651,7 +651,7 @@
             <button id="btab-security" onclick="switchBoardTab('security')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition">
               🔐 6. Security &amp; Sheet
             </button>
-            <button onclick="exportEvaluationDetailedExcel()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 hover:bg-emerald-500 hover:text-canvas-bg text-emerald-400 border border-emerald-500/40 transition flex items-center gap-1" title="Export All Data (Tasks, Drive Links, Evaluations & Rankings) to Excel">
+            <button onclick="exportEverythingMasterExcel()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 hover:bg-emerald-500 hover:text-canvas-bg text-emerald-400 border border-emerald-500/40 transition flex items-center gap-1" title="Export All Data (Tasks, Drive Links, Evaluations & Rankings) to Excel">
               <span>⬇ Export All (Excel)</span>
             </button>
             <button onclick="refreshFromServer()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-canvas-blue/15 hover:bg-canvas-blue hover:text-canvas-bg text-canvas-blue border border-canvas-blue/40 transition" title="Reload latest submissions from the Google Sheet">🔄 Sync</button>
@@ -729,16 +729,16 @@
                   🗺️ Master 6-Pillars Summary
                 </button>
                 <button onclick="exportActivePillarExcel()" class="bg-canvas-bg hover:bg-canvas-elevated text-canvas-gold border border-canvas-gold/50 font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
-                  ⬇ Export Opened Section: Points &amp; % (Excel)
+                  ⬇ Export Opened Section (Excel)
                 </button>
                 <button onclick="exportFullMatrixCSV()" class="bg-canvas-blue hover:bg-sky-300 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
                   ⬇ Export 6-Pillars Summary (Excel)
                 </button>
-                <button onclick="exportEvaluationDetailedExcel()" class="bg-emerald-500 hover:bg-emerald-400 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition shadow">
-                  ⬇ Export Evaluation: Points &amp; % (Excel)
+                <button onclick="exportEverythingMasterExcel()" class="bg-emerald-500 hover:bg-emerald-400 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition shadow">
+                  ⬇ Export Everything All-in-One (Excel)
                 </button>
-                <button onclick="exportEverythingMasterExcel()" class="bg-canvas-bg hover:bg-canvas-elevated text-emerald-400 border border-emerald-500/50 font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
-                  ⬇ Export All-in-One (wide)
+                <button onclick="exportEvaluationDetailedExcel()" class="bg-canvas-bg hover:bg-canvas-elevated text-emerald-400 border border-emerald-500/50 font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
+                  ⬇ Extra: Row-per-item (Points &amp; %)
                 </button>
               </div>
             </div>
@@ -3534,10 +3534,51 @@
     // 3) Export Currently Opened Mind Map Pillar (Alone)
     function exportActivePillarExcel() {
       if (activeMindMapPillarId === "ALL") {
-        exportEvaluationDetailedExcel();
+        exportFullMatrixCSV();
         return;
       }
-      exportEvaluationDetailedExcel(activeMindMapPillarId);
+
+      const activePillar = FIXED_PILLARS.find((p) => p.id === activeMindMapPillarId);
+      if (!activePillar) return;
+
+      if (activePillar.isTasksPillar) {
+        exportAllTasksSubmissionsExcel();
+        return;
+      }
+
+      const subCols = pillarSubColumns[activePillar.id] || [];
+      const sh45 = Number(((activePillar.weight100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
+      const headers = [
+        "Member Name",
+        "Private Secret Code",
+        "Team",
+        ...subCols.map((c) => `${c.title} (Out of ${c.maxScore})`),
+        `${activePillar.title} Total Score`,
+        `Pillar Share (Out of ${activePillar.weight100}%)`,
+        `Official 45% Share (Out of ${sh45}%)`
+      ];
+
+      const stats = calculateAllMemberStats();
+      const rows = stats.map((st) => {
+        const pt = st.pillarTotals[activePillar.id];
+        return [
+          st.name,
+          st.code,
+          "Video",
+          ...subCols.map((c) =>
+            pt.subBreakdown && pt.subBreakdown[c.id] !== null && pt.subBreakdown[c.id] !== undefined
+              ? pt.subBreakdown[c.id]
+              : ""
+          ),
+          `${pt.rawSum} / ${pt.maxSum}`,
+          `${pt.earnedOf100}%`,
+          `${pt.earnedOf45}%`
+        ];
+      });
+
+      const safeName = activePillar.shortTitle.replace(/[^a-zA-Z0-9_-]/g, "_");
+      downloadCSVFile(`Enactus_Video_${safeName}_Evaluation.csv`, headers, rows);
+      showToast(`Exported ${activePillar.title} to Excel`, "📊");
     }
 
     // 4) Export 6-Pillars Summary Matrix

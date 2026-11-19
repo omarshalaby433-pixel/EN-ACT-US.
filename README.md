@@ -1190,7 +1190,7 @@
     // ===== BACKEND CONFIG =====
     // الصق هنا رابط الـ Web App بتاع Google Apps Script (بينتهي بـ /exec).
     // لو سبته فاضي، الموقع بيشتغل محلياً على المتصفح بس (localStorage) للتجربة.
-    const BAKED_API_URL = "https://script.google.com/macros/s/AKfycbyTi4X45hXBI_Lv5BaFjs4VfNI2JWvl8Tj5UVjqI62n-K7JdRG2qTy2IqtaD0wk9let/exec"; // اختياري: لو لصقت الرابط هنا مش هتحتاج ?api= ولا الإعداد من الصفحة
+    const BAKED_API_URL = "https://script.google.com/macros/s/AKfycbzcprljCs2kHdNPjIw0NnYqNn9W26aW0sLX-vYCuWZMKwyw5hq-mTLnHEE9U8sB57Q/exec"; // اختياري: لو لصقت الرابط هنا مش هتحتاج ?api= ولا الإعداد من الصفحة
     let API_URL = BAKED_API_URL;
     try {
       const q = new URLSearchParams(location.search).get("api");
@@ -3432,7 +3432,7 @@
           );
         });
         const pt = st.pillarTotals["PIL-TASKS"];
-        row.push(`${pt.rawSum} / ${pt.maxSum}`, `${pt.earnedOf100}% / ${FIXED_PILLARS[0].weight100}%`);
+        row.push(`${pt.rawSum} out of ${pt.maxSum}`, `${pt.earnedOf100}% / ${FIXED_PILLARS[0].weight100}%`);
         return row;
       });
 
@@ -3570,7 +3570,7 @@
               ? pt.subBreakdown[c.id]
               : ""
           ),
-          `${pt.rawSum} / ${pt.maxSum}`,
+          `${pt.rawSum} out of ${pt.maxSum}`,
           `${pt.earnedOf100}%`,
           `${pt.earnedOf45}%`
         ];
@@ -3584,24 +3584,29 @@
     // 4) Export 6-Pillars Summary Matrix
     function exportFullMatrixCSV() {
       const stats = calculateAllMemberStats();
+      // Max points of each pillar are the same for every member, so they go in the header
+      const pillarMax = (p) =>
+        p.isTasksPillar
+          ? tasks.reduce((sum, t) => sum + Number(t.maxScore || 0), 0)
+          : (pillarSubColumns[p.id] || []).reduce((sum, c) => sum + Number(c.maxScore || 0), 0);
+
       const headers = [
         "Overall Rank",
         "Private Secret Code",
         "Member Name",
         "Team",
-        ...FIXED_PILLARS.map((p) => `${p.title} Total Score`),
-        ...FIXED_PILLARS.map((p) => `${p.title} (${p.weight100}%)`),
+        ...FIXED_PILLARS.map((p) => `${p.title} Score (out of ${pillarMax(p)})`),
         "Total Video Score (100%)",
         "Official Video Share (45%)"
       ];
 
+      // Scores are written as plain numbers (no "x / y" text) so Excel never turns them into dates
       const rows = stats.map((st) => [
         `#${st.overallRank}`,
         st.code,
         st.name,
         "Video",
-        ...FIXED_PILLARS.map((p) => `${st.pillarTotals[p.id].rawSum} / ${st.pillarTotals[p.id].maxSum}`),
-        ...FIXED_PILLARS.map((p) => `${st.pillarTotals[p.id].earnedOf100}%`),
+        ...FIXED_PILLARS.map((p) => st.pillarTotals[p.id].rawSum),
         `${st.weightedTotalPct100}%`,
         `${st.videoShare45}%`
       ]);
@@ -3700,7 +3705,7 @@
         });
 
         const taskPillar = st.pillarTotals["PIL-TASKS"];
-        row.push(`${taskPillar.rawSum}/${taskPillar.maxSum}`, `${taskPillar.earnedOf100}%`);
+        row.push(`${taskPillar.rawSum} out of ${taskPillar.maxSum}`, `${taskPillar.earnedOf100}%`);
 
         FIXED_PILLARS.filter((p) => !p.isTasksPillar).forEach((p) => {
           const pt = st.pillarTotals[p.id];
@@ -3712,7 +3717,7 @@
                 : "";
             row.push(val);
           });
-          row.push(`${pt.rawSum}/${pt.maxSum}`, `${pt.earnedOf100}%`);
+          row.push(`${pt.rawSum} out of ${pt.maxSum}`, `${pt.earnedOf100}%`);
         });
 
         return row;

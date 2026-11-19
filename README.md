@@ -651,7 +651,7 @@
             <button id="btab-security" onclick="switchBoardTab('security')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition">
               🔐 6. Security &amp; Sheet
             </button>
-            <button onclick="exportEverythingMasterExcel()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 hover:bg-emerald-500 hover:text-canvas-bg text-emerald-400 border border-emerald-500/40 transition flex items-center gap-1" title="Export All Data (Tasks, Drive Links, Evaluations & Rankings) to Excel">
+            <button onclick="exportEvaluationDetailedExcel()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 hover:bg-emerald-500 hover:text-canvas-bg text-emerald-400 border border-emerald-500/40 transition flex items-center gap-1" title="Export All Data (Tasks, Drive Links, Evaluations & Rankings) to Excel">
               <span>⬇ Export All (Excel)</span>
             </button>
             <button onclick="refreshFromServer()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-canvas-blue/15 hover:bg-canvas-blue hover:text-canvas-bg text-canvas-blue border border-canvas-blue/40 transition" title="Reload latest submissions from the Google Sheet">🔄 Sync</button>
@@ -729,13 +729,16 @@
                   🗺️ Master 6-Pillars Summary
                 </button>
                 <button onclick="exportActivePillarExcel()" class="bg-canvas-bg hover:bg-canvas-elevated text-canvas-gold border border-canvas-gold/50 font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
-                  ⬇ Export Opened Section (Excel)
+                  ⬇ Export Opened Section: Points &amp; % (Excel)
                 </button>
                 <button onclick="exportFullMatrixCSV()" class="bg-canvas-blue hover:bg-sky-300 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
                   ⬇ Export 6-Pillars Summary (Excel)
                 </button>
-                <button onclick="exportEverythingMasterExcel()" class="bg-emerald-500 hover:bg-emerald-400 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition shadow">
-                  ⬇ Export Everything All-in-One (Excel)
+                <button onclick="exportEvaluationDetailedExcel()" class="bg-emerald-500 hover:bg-emerald-400 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition shadow">
+                  ⬇ Export Evaluation: Points &amp; % (Excel)
+                </button>
+                <button onclick="exportEverythingMasterExcel()" class="bg-canvas-bg hover:bg-canvas-elevated text-emerald-400 border border-emerald-500/50 font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
+                  ⬇ Export All-in-One (wide)
                 </button>
               </div>
             </div>
@@ -750,7 +753,7 @@
                     🎬 Video Team Total Evaluation (100% Scale = 45% Official Share)
                   </div>
                   <div class="text-[11px] font-mono text-slate-400 mt-0.5">
-                    Fixed Weights: 20% + 15% + 15% + 25% + 15% + 10% = 100% (+ 55% HR)
+                    Weights: Tasks 30% (Deadline 10 + Creativity 10 + Quality 10) + 5 pillars × 3% = 45% (+ 55% HR)
                   </div>
                 </div>
                 <!-- Vertical Stem Line -->
@@ -841,7 +844,7 @@
                 </div>
                 <div class="md:col-span-2">
                   <label class="block text-[10px] font-mono text-slate-400 mb-1">Score Out Of</label>
-                  <input id="newTaskMaxInput" type="number" value="100" class="w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none" />
+                  <input id="newTaskMaxInput" type="number" value="30" readonly title="Fixed: Deadline 10 + Creativity 10 + Quality 10" class="w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none" />
                 </div>
                 <div class="md:col-span-2">
                   <label class="block text-[10px] font-mono text-slate-400 mb-1">Deadline</label>
@@ -1035,7 +1038,9 @@
   <script>
     // -----------------------------------------------------------------
     // 1. FIXED 6 CORE PILLARS & INITIAL SAMPLE DATA
-    //    The 6 Fixed Pillars sum to 100% of Video Evaluation (= 45% of Enactus Total, HR = 55%)
+    //    Video Evaluation = 45% of Enactus Total (HR = 55%):
+    //      Tasks 30% (Deadline 10% + Creativity 10% + Quality 10%) + 5 pillars x 3% = 15%  ->  45%
+    //    weight100 below = the pillar's weight as "% of the 45%" (so 30 + 3x5 = 45).
     // -----------------------------------------------------------------
     const VIDEO_OFFICIAL_SHARE = 45; // 45% Video Team Share (HR = 55%)
 
@@ -1044,7 +1049,7 @@
         id: "PIL-TASKS",
         title: "TASK QUALITY AND RELIABILITY",
         shortTitle: "TASK QUALITY & RELIABILITY",
-        weight100: 20, // 20% of Video 100% (= 9% of 45%)
+        weight100: 30, // 30% of the 45%
         icon: "🎬",
         accent: "gold",
         isTasksPillar: true
@@ -1053,7 +1058,7 @@
         id: "PIL-ALIGN",
         title: "ALIGNMENT TEAM GOALS AND IMPACT",
         shortTitle: "ALIGNMENT & IMPACT",
-        weight100: 15, // 15% of Video 100% (= 6.75% of 45%)
+        weight100: 3, // 3% of the 45%
         icon: "🎯",
         accent: "blue",
         isTasksPillar: false
@@ -1062,7 +1067,7 @@
         id: "PIL-PROB",
         title: "PROBLEM SOLVING",
         shortTitle: "PROBLEM SOLVING",
-        weight100: 15, // 15% of Video 100% (= 6.75% of 45%)
+        weight100: 3, // 3% of the 45%
         icon: "🧩",
         accent: "emerald",
         isTasksPillar: false
@@ -1071,7 +1076,7 @@
         id: "PIL-COLLAB",
         title: "COLLABORATION",
         shortTitle: "COLLABORATION",
-        weight100: 25, // 25% of Video 100% (= 11.25% of 45%)
+        weight100: 3, // 3% of the 45%
         icon: "🤝",
         accent: "gold",
         isTasksPillar: false
@@ -1080,7 +1085,7 @@
         id: "PIL-GROWTH",
         title: "GROWTH MINDSET",
         shortTitle: "GROWTH MINDSET",
-        weight100: 15, // 15% of Video 100% (= 6.75% of 45%)
+        weight100: 3, // 3% of the 45%
         icon: "🚀",
         accent: "blue",
         isTasksPillar: false
@@ -1089,19 +1094,27 @@
         id: "PIL-LEAD",
         title: "LEADERSHIP",
         shortTitle: "LEADERSHIP",
-        weight100: 10, // 10% of Video 100% (= 4.5% of 45%)
+        weight100: 3, // 3% of the 45%
         icon: "👑",
         accent: "emerald",
         isTasksPillar: false
       }
     ];
 
+    // Every task is graded on 3 criteria. Together they make the 30% Tasks pillar (10% each).
+    const TASK_CRITERIA = [
+      { id: "deadline", title: "Deadline", max: 10, weight: 10 },
+      { id: "creativity", title: "Creativity", max: 10, weight: 10 },
+      { id: "quality", title: "Quality", max: 10, weight: 10 }
+    ];
+    const TASK_MAX_TOTAL = TASK_CRITERIA.reduce((a, c) => a + c.max, 0); // 30 points per task
+
     const initialTasks = [
       {
         id: "TASK-01",
         title: "Task 01: File Organization & Rough Cut",
         brief: "Organize your project folders (Footage, Audio, SFX) and assemble a clean 45-second rough cut on the timeline.",
-        maxScore: 100,
+        maxScore: 30,
         deadlineISO: "2026-11-22T23:59",
         forceLocked: false
       },
@@ -1109,7 +1122,7 @@
         id: "TASK-02",
         title: "Task 02: Cinematography & Composition Frames",
         brief: "Film 5 purposeful shots applying Focus, Rule of Thirds, Low/High Angles, and 45° Key Lighting.",
-        maxScore: 100,
+        maxScore: 30,
         deadlineISO: "2026-11-29T23:59",
         forceLocked: false
       },
@@ -1117,7 +1130,7 @@
         id: "TASK-03",
         title: "Task 03: Reels Pacing & Sound Design",
         brief: "Edit a fast-paced Enactus Reel with a strong 3-second hook, B-Roll coverage, and balanced SFX.",
-        maxScore: 100,
+        maxScore: 30,
         deadlineISO: "2026-12-06T23:59",
         forceLocked: false
       }
@@ -1233,7 +1246,7 @@
     function applyDefaultsAfterLoad() {
       if (!tasks.length) tasks = JSON.parse(JSON.stringify(initialTasks));
       members.forEach((m, idx) => { if (!m.id) m.id = `MEM-${String(idx + 1).padStart(2, "0")}`; });
-      tasks.forEach((t) => { if (!t.maxScore || isNaN(Number(t.maxScore))) t.maxScore = 100; });
+      tasks.forEach((t) => { t.maxScore = TASK_MAX_TOTAL; });
       FIXED_PILLARS.forEach((p) => {
         if (!p.isTasksPillar && !Array.isArray(pillarSubColumns[p.id])) {
           pillarSubColumns[p.id] = JSON.parse(JSON.stringify(initialPillarSubColumns[p.id] || []));
@@ -1751,6 +1764,15 @@
       }
 
       const isGraded = sub.score !== null && sub.score !== "";
+      const critHtml = sub.criteria
+        ? `<div class="grid grid-cols-3 gap-3 text-xs">${TASK_CRITERIA.map((c) => {
+            const v = sub.criteria[c.id];
+            return `<div class="bg-canvas-panel border border-canvas-border rounded-xl p-3 text-center">
+              <div class="text-[10px] font-mono text-slate-400 uppercase">${c.title}</div>
+              <div class="font-mono font-black text-canvas-gold mt-0.5">${v === null || v === undefined ? "—" : v} <span class="text-slate-500 font-normal">/ ${c.max}</span></div>
+            </div>`;
+          }).join("")}</div>`
+        : "";
       resBox.innerHTML = `
         <div class="bg-canvas-bg border-2 ${isGraded ? "border-canvas-gold" : "border-canvas-blue/50"} rounded-2xl p-5 space-y-4 shadow-xl">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-canvas-border pb-3">
@@ -1766,6 +1788,7 @@
             </div>
           </div>
 
+          ${critHtml}
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div class="bg-canvas-panel border border-canvas-border rounded-xl p-3">
               <div class="text-[10px] font-mono text-slate-400 uppercase">Selected Task</div>
@@ -1998,30 +2021,36 @@
                 }
               </div>
 
-              <!-- Score & Feedback Inputs -->
-              <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
-                <div class="sm:col-span-4">
-                  <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Score (Out of ${task.maxScore})</label>
-                  <input
-                    id="bgrade-score-${m.code}"
-                    type="number"
-                    min="0"
-                    max="${task.maxScore}"
-                    value="${scoreVal}"
-                    placeholder="0 - ${task.maxScore}"
-                    class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs font-mono font-bold text-canvas-gold focus:outline-none"
-                  />
-                </div>
-                <div class="sm:col-span-8">
-                  <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Board Feedback</label>
-                  <input
-                    id="bgrade-fb-${m.code}"
-                    type="text"
-                    value="${fbVal.replace(/"/g, "&quot;")}"
-                    placeholder="Write constructive feedback for ${m.name}..."
-                    class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
-                  />
-                </div>
+              <!-- Criteria Scores & Feedback -->
+              <div class="grid grid-cols-3 gap-2.5">
+                ${TASK_CRITERIA.map((c) => {
+                  const saved = sub?.criteria?.[c.id];
+                  const hasSaved = saved !== null && saved !== undefined && saved !== "";
+                  const suggest = c.id === "deadline" ? onTimeSuggestion(task, sub) : null;
+                  const val = hasSaved ? saved : suggest !== null && !sub?.criteria ? suggest : "";
+                  return `
+                    <div>
+                      <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">${c.title} (/${c.max})</label>
+                      <input
+                        id="bgrade-c-${c.id}-${m.code}"
+                        type="number" min="0" max="${c.max}" step="0.5"
+                        value="${val}"
+                        placeholder="0 - ${c.max}"
+                        class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs font-mono font-bold text-canvas-gold focus:outline-none"
+                      />
+                      ${c.id === "deadline" && suggest !== null && !hasSaved ? `<div class="text-[9px] font-mono text-slate-500 mt-0.5">${suggest === c.max ? "On time ✓ (suggested)" : "Late (suggested)"}</div>` : ""}
+                    </div>`;
+                }).join("")}
+              </div>
+              <div>
+                <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Board Feedback &nbsp;•&nbsp; Task total = ${TASK_MAX_TOTAL} points</label>
+                <input
+                  id="bgrade-fb-${m.code}"
+                  type="text"
+                  value="${fbVal.replace(/"/g, "&quot;")}"
+                  placeholder="Write constructive feedback for ${m.name}..."
+                  class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+                />
               </div>
 
               <div class="flex justify-end pt-1">
@@ -2039,20 +2068,37 @@
       }
     }
 
+    // Suggest the Deadline score: full points if submitted on/before the deadline, otherwise 0
+    function onTimeSuggestion(task, sub) {
+      if (!sub || !sub.timestamp || !task?.deadlineISO) return null;
+      const deadline = String(task.deadlineISO).slice(0, 16).replace("T", " ");
+      return String(sub.timestamp) <= deadline ? TASK_CRITERIA[0].max : 0;
+    }
+
+    function criteriaTotal(crit) {
+      const any = TASK_CRITERIA.some((c) => crit[c.id] !== null && crit[c.id] !== undefined);
+      return any ? TASK_CRITERIA.reduce((sum, c) => sum + (Number(crit[c.id]) || 0), 0) : null;
+    }
+
     function saveBoardCardEvaluation(taskId, memberCode) {
       const task = tasks.find((t) => t.id === taskId);
       const member = members.find((m) => m.code === memberCode);
       if (!task || !member) return;
 
-      const scoreRaw = document.getElementById(`bgrade-score-${memberCode}`)?.value.trim() || "";
       const fbVal = document.getElementById(`bgrade-fb-${memberCode}`)?.value.trim() || "";
       const linkVal = document.getElementById(`bgrade-link-${memberCode}`)?.value.trim() || "";
       const evaluator = document.getElementById("boardActiveEvaluator")?.value || "Omar Shalaby";
 
-      if (scoreRaw !== "" && (isNaN(Number(scoreRaw)) || Number(scoreRaw) < 0 || Number(scoreRaw) > task.maxScore)) {
-        showToast(`Score must be between 0 and ${task.maxScore}`, "!");
-        return;
+      const crit = {};
+      for (const c of TASK_CRITERIA) {
+        const raw = document.getElementById(`bgrade-c-${c.id}-${memberCode}`)?.value.trim() || "";
+        if (raw !== "" && (isNaN(Number(raw)) || Number(raw) < 0 || Number(raw) > c.max)) {
+          showToast(`${c.title} must be between 0 and ${c.max}`, "!");
+          return;
+        }
+        crit[c.id] = raw === "" ? null : Number(raw);
       }
+      const total = criteriaTotal(crit);
 
       let sub = submissions.find(
         (s) => s.taskId === taskId && (s.memberCode === memberCode || s.memberId === member.id)
@@ -2067,21 +2113,52 @@
           driveLink: linkVal,
           note: "",
           timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-          score: scoreRaw === "" ? null : Number(scoreRaw),
+          score: total,
+          criteria: crit,
           evaluator,
           feedback: fbVal
         };
         submissions.push(sub);
       } else {
         sub.driveLink = linkVal;
-        sub.score = scoreRaw === "" ? null : Number(scoreRaw);
+        sub.score = total;
+        sub.criteria = crit;
         sub.evaluator = evaluator;
         sub.feedback = fbVal;
       }
 
       saveState();
       renderBoardAllPanels();
-      showToast(`Saved evaluation for ${member.name}`);
+      showToast(`Saved evaluation for ${member.name}${total !== null ? ` (${total}/${TASK_MAX_TOTAL})` : ""}`);
+    }
+
+    // Inline edit from the Evaluation Matrix (Tasks pillar): one criterion at a time
+    function updateInlineTaskCriterion(taskId, memberCode, critId, val) {
+      const crit = TASK_CRITERIA.find((c) => c.id === critId);
+      const clean = String(val).trim();
+      if (!crit) return;
+      if (clean !== "" && (isNaN(Number(clean)) || Number(clean) < 0 || Number(clean) > crit.max)) {
+        showToast(`${crit.title} must be between 0 and ${crit.max}`, "!");
+        renderEvaluationMatrix();
+        return;
+      }
+      const member = members.find((m) => m.code === memberCode);
+      if (!member) return;
+      let sub = submissions.find((s) => s.taskId === taskId && (s.memberCode === memberCode || s.memberId === member.id));
+      if (!sub) {
+        sub = {
+          refCode: "REF-" + Math.floor(1000 + Math.random() * 9000),
+          taskId, memberId: member.id, memberCode, driveLink: "", note: "", timestamp: "",
+          score: null, criteria: {}, evaluator: document.getElementById("boardActiveEvaluator")?.value || "Board", feedback: ""
+        };
+        submissions.push(sub);
+      }
+      sub.criteria = sub.criteria || {};
+      sub.criteria[critId] = clean === "" ? null : Number(clean);
+      sub.score = criteriaTotal(sub.criteria);
+      saveState();
+      renderEvaluationMatrix();
+      renderBoardRankingsDashboard();
     }
 
     // -----------------------------------------------------------------
@@ -2272,7 +2349,7 @@
       if (!pillar) return;
 
       if (pillar.isTasksPillar) {
-        // Add a new Task directly into Task Quality and Reliability (20%)
+        // Add a new Task directly into the Tasks pillar (30%)
         const nextNum = tasks.length + 1;
         const newId = `TASK-${String(nextNum).padStart(2, "0")}-${Date.now().toString().slice(-2)}`;
         const newTitle = `Task ${String(nextNum).padStart(2, "0")}: New Task`;
@@ -2280,13 +2357,13 @@
           id: newId,
           title: newTitle,
           brief: "Upload your task files to Google Drive and submit the link.",
-          maxScore: 100,
+          maxScore: TASK_MAX_TOTAL,
           deadlineISO: "2026-12-20T23:59",
           forceLocked: false
         });
         saveState();
         refreshAllSelectorsAndViews();
-        showToast(`Added "${newTitle}" under Task Quality & Reliability (20%)`);
+        showToast(`Added "${newTitle}" under Tasks (30%)`);
         return;
       }
 
@@ -2355,21 +2432,14 @@
       }
     }
 
-    function updateTaskHeaderMaxInline(taskId, newMax) {
-      const task = tasks.find((t) => t.id === taskId);
-      if (!task) return;
-      const parsed = Number(newMax);
-      if (!isNaN(parsed) && parsed > 0) {
-        task.maxScore = parsed;
-        saveState();
-        refreshAllSelectorsAndViews();
-        showToast(`Updated task max score to ${parsed}`);
-      }
+    function updateTaskHeaderMaxInline() {
+      showToast("Task score is fixed: Deadline 10 + Creativity 10 + Quality 10 = 30", "i");
+      renderEvaluationMatrix();
     }
 
     function updateInlineTaskScore(taskId, memberCode, val) {
       const task = tasks.find((t) => t.id === taskId);
-      const maxPts = task ? task.maxScore : 100;
+      const maxPts = task ? task.maxScore : TASK_MAX_TOTAL;
       const clean = val.trim();
 
       if (clean !== "" && (isNaN(Number(clean)) || Number(clean) < 0 || Number(clean) > maxPts)) {
@@ -2435,7 +2505,7 @@
 
         FIXED_PILLARS.forEach((p) => {
           const weight100 = Number(p.weight100);
-          const maxOf45 = Number(((weight100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
+          const maxOf45 = weight100; // weights are already "% of the 45%"
 
           if (p.isTasksPillar) {
             let rawSum = 0;
@@ -2453,13 +2523,30 @@
                 numScore: sc,
                 maxScore: mSc,
                 driveLink: sub?.driveLink || "",
-                feedback: sub?.feedback || ""
+                feedback: sub?.feedback || "",
+                criteria: sub?.criteria || null
               };
+            });
+
+            // Per-criterion totals across all tasks (Deadline / Creativity / Quality)
+            const criteria = {};
+            TASK_CRITERIA.forEach((c) => {
+              let earned = 0;
+              let graded = false;
+              tasks.forEach((t) => {
+                const sb = submissions.find((s) => s.taskId === t.id && s.memberCode === m.code);
+                const v = sb?.criteria?.[c.id];
+                if (v !== null && v !== undefined && v !== "") {
+                  earned += Number(v);
+                  graded = true;
+                }
+              });
+              criteria[c.id] = { earned, max: tasks.length * c.max, graded };
             });
 
             const ratio = maxSum > 0 ? rawSum / maxSum : 0;
             const earnedOf100 = Number((ratio * weight100).toFixed(2));
-            const earnedOf45 = Number(((earnedOf100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
+            const earnedOf45 = earnedOf100;
 
             pillarTotals[p.id] = {
               rawSum,
@@ -2468,7 +2555,8 @@
               weight100,
               earnedOf100,
               maxOf45,
-              earnedOf45
+              earnedOf45,
+              criteria
             };
 
             totalVideo100 += earnedOf100;
@@ -2492,7 +2580,7 @@
 
             const ratio = maxSum > 0 ? rawSum / maxSum : 0;
             const earnedOf100 = Number((ratio * weight100).toFixed(2));
-            const earnedOf45 = Number(((earnedOf100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
+            const earnedOf45 = earnedOf100;
 
             pillarTotals[p.id] = {
               rawSum,
@@ -2511,8 +2599,9 @@
           }
         });
 
-        const weightedTotalPct100 = Number(totalVideo100.toFixed(2));
-        const videoShare45 = Number(((weightedTotalPct100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
+        // totalVideo100 is the sum of pillar points out of 45 (30 tasks + 5 x 3)
+        const videoShare45 = Number(totalVideo100.toFixed(2));
+        const weightedTotalPct100 = Number(((totalVideo100 / VIDEO_OFFICIAL_SHARE) * 100).toFixed(2));
 
         return {
           code: m.code,
@@ -2574,7 +2663,7 @@
       gridEl.innerHTML = FIXED_PILLARS.map((p) => {
         const isSelected = activeMindMapPillarId === p.id;
         const subCount = p.isTasksPillar ? tasks.length : (pillarSubColumns[p.id] || []).length;
-        const share45 = Number(((p.weight100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
+        const share45 = Number(p.weight100);
 
         return `
           <div
@@ -2636,7 +2725,7 @@
         `;
 
         FIXED_PILLARS.forEach((p) => {
-          const sh45 = Number(((p.weight100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
+          const sh45 = Number(p.weight100);
           const subCount = p.isTasksPillar ? tasks.length : (pillarSubColumns[p.id] || []).length;
           headHtml += `
             <th onclick="selectMindMapPillar('${p.id}')" class="cursor-pointer hover:bg-canvas-gold/10 transition py-3 px-3 min-w-[165px] border-l border-canvas-border align-top">
@@ -2712,7 +2801,7 @@
 
       // 3. Render Drill-Down Sub-Columns Table for the Active Pillar
       const activePillar = FIXED_PILLARS.find((p) => p.id === activeMindMapPillarId) || FIXED_PILLARS[0];
-      const sh45 = Number(((activePillar.weight100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
+      const sh45 = Number(activePillar.weight100);
 
       if (toolbarEl) {
         toolbarEl.innerHTML = `
@@ -2749,7 +2838,7 @@
 
         tasks.forEach((t) => {
           headHtml += `
-            <th class="py-2.5 px-3 min-w-[185px] border-l border-canvas-border bg-canvas-gold/5 align-top space-y-1.5">
+            <th class="py-2.5 px-3 min-w-[260px] border-l border-canvas-border bg-canvas-gold/5 align-top space-y-1.5">
               <div class="flex items-center gap-1">
                 <input
                   type="text"
@@ -2770,8 +2859,8 @@
                   type="number"
                   min="1"
                   max="1000"
-                  value="${t.maxScore}"
-                  onchange="updateTaskHeaderMaxInline('${t.id}', this.value)"
+                  value="${t.maxScore}" readonly title="Fixed: Deadline 10 + Creativity 10 + Quality 10"
+                  onchange="updateTaskHeaderMaxInline()"
                   class="w-14 bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded px-1 py-0.5 text-[10px] font-mono font-bold text-white text-center focus:outline-none"
                 />
               </div>
@@ -2813,21 +2902,24 @@
 
               row += `
                 <td class="py-2.5 px-3 border-l border-canvas-border align-middle">
-                  <div class="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      min="0"
-                      max="${t.maxScore}"
-                      value="${val}"
-                      placeholder="—"
-                      onchange="updateInlineTaskScore('${t.id}', '${st.code}', this.value)"
-                      class="w-20 bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-white text-center focus:outline-none"
-                    />
+                  <div class="flex items-center gap-1">
+                    ${TASK_CRITERIA.map((c) => {
+                      const cv = tb && tb.criteria && tb.criteria[c.id] !== null && tb.criteria[c.id] !== undefined ? tb.criteria[c.id] : "";
+                      return `<div class="text-center">
+                        <div class="text-[9px] font-mono text-slate-500">${c.title.slice(0, 3).toUpperCase()}/${c.max}</div>
+                        <input type="number" min="0" max="${c.max}" step="0.5" value="${cv}" placeholder="—"
+                          title="${c.title} (out of ${c.max})"
+                          onchange="updateInlineTaskCriterion('${t.id}', '${st.code}', '${c.id}', this.value)"
+                          class="w-12 bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-lg px-1 py-1 text-xs font-mono font-bold text-white text-center focus:outline-none" />
+                      </div>`;
+                    }).join("")}
+                    <div class="text-center px-1">
+                      <div class="text-[9px] font-mono text-slate-500">TOTAL</div>
+                      <div class="text-xs font-mono font-black text-canvas-gold">${tb && tb.score !== null ? tb.score : "—"}<span class="text-slate-500 font-normal">/${t.maxScore}</span></div>
+                    </div>
                     ${
                       hasLink
-                        ? `<a href="${tb.driveLink}" target="_blank" rel="noopener noreferrer" title="Open Submitted Google Drive Link" class="px-2 py-1 rounded bg-canvas-blue/15 text-canvas-blue hover:bg-canvas-blue hover:text-canvas-bg font-mono text-[10px] font-bold transition whitespace-nowrap">
-                             🔗 Drive
-                           </a>`
+                        ? `<a href="${tb.driveLink}" target="_blank" rel="noopener noreferrer" title="Open Submitted Google Drive Link" class="px-2 py-1 rounded bg-canvas-blue/15 text-canvas-blue hover:bg-canvas-blue hover:text-canvas-bg font-mono text-[10px] font-bold transition whitespace-nowrap">🔗</a>`
                         : ""
                     }
                   </div>
@@ -3094,7 +3186,7 @@
 
       const title = titleIn.value.trim();
       const brief = briefIn.value.trim();
-      const maxScore = Number(maxIn.value) || 100;
+      const maxScore = TASK_MAX_TOTAL;
       const deadlineISO = dlIn.value || "2026-12-15T23:59";
 
       if (!title) {
@@ -3170,7 +3262,7 @@
                 </div>
                 <div class="md:col-span-2">
                   <label class="block text-[10px] font-mono text-slate-400 mb-1">Score Out Of</label>
-                  <input id="edit-max-${t.id}" type="number" value="${t.maxScore}" class="w-full bg-canvas-bg border border-canvas-border rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none" />
+                  <input id="edit-max-${t.id}" type="number" value="${t.maxScore}" readonly title="Fixed: Deadline 10 + Creativity 10 + Quality 10" class="w-full bg-canvas-bg border border-canvas-border rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none" />
                 </div>
                 <div class="md:col-span-2">
                   <label class="block text-[10px] font-mono text-slate-400 mb-1">Deadline</label>
@@ -3195,7 +3287,7 @@
 
       const title = document.getElementById(`edit-title-${taskId}`)?.value.trim();
       const brief = document.getElementById(`edit-brief-${taskId}`)?.value.trim();
-      const maxScore = Number(document.getElementById(`edit-max-${taskId}`)?.value) || 100;
+      const maxScore = TASK_MAX_TOTAL;
       const deadlineISO = document.getElementById(`edit-dl-${taskId}`)?.value;
 
       if (title) task.title = title;
@@ -3264,7 +3356,9 @@
         "Submitted Timestamp",
         "Google Drive Link",
         "Member Delivery Note",
+        ...TASK_CRITERIA.map((c) => `${c.title} (Out of ${c.max})`),
         `Score (Out of ${task.maxScore})`,
+        "Score %",
         "Reviewed By (Board)",
         "Board Feedback"
       ];
@@ -3284,7 +3378,12 @@
           sub?.timestamp || "",
           sub?.driveLink || "",
           sub?.note || "",
+          ...TASK_CRITERIA.map((c) => {
+            const v = sub?.criteria?.[c.id];
+            return v === null || v === undefined ? "" : v;
+          }),
           hasScore ? sub.score : "",
+          hasScore ? `${Number(((sub.score / task.maxScore) * 100).toFixed(2))}%` : "",
           sub?.evaluator || "",
           sub?.feedback || ""
         ];
@@ -3314,7 +3413,7 @@
         );
       });
 
-      headers.push("Total Tasks Raw Score", "TASK QUALITY & RELIABILITY (20%)");
+      headers.push("Total Tasks Raw Score", "TASK QUALITY & RELIABILITY (30%)");
 
       const stats = calculateAllMemberStats();
       const rows = stats.map((st) => {
@@ -3333,7 +3432,7 @@
           );
         });
         const pt = st.pillarTotals["PIL-TASKS"];
-        row.push(`${pt.rawSum} / ${pt.maxSum}`, `${pt.earnedOf100}% / 20%`);
+        row.push(`${pt.rawSum} / ${pt.maxSum}`, `${pt.earnedOf100}% / ${FIXED_PILLARS[0].weight100}%`);
         return row;
       });
 
@@ -3341,54 +3440,104 @@
       showToast("Exported All Tasks & Google Drive Links to Excel", "📊");
     }
 
-    // 3) Export Currently Opened Mind Map Pillar (Alone)
-    function exportActivePillarExcel() {
-      if (activeMindMapPillarId === "ALL") {
-        exportFullMatrixCSV();
-        return;
-      }
+    // ===== NEW: Evaluation export — one row per evaluation item =====
+    // Columns: Name | Code | Evaluation Type | Criterion | Points earned | Points out of | % earned | Weight (% of 45) | Gained (% of 45) | extras...
+    function exportEvaluationDetailedExcel(pillarId) {
+      const r2 = (n) => Number(Number(n).toFixed(2));
+      const pct = (n) => `${r2(n * 100)}%`;
+      const stats = calculateAllMemberStats();
+      const pillars = FIXED_PILLARS.filter((p) => !pillarId || p.id === pillarId);
 
-      const activePillar = FIXED_PILLARS.find((p) => p.id === activeMindMapPillarId);
-      if (!activePillar) return;
-
-      if (activePillar.isTasksPillar) {
-        exportAllTasksSubmissionsExcel();
-        return;
-      }
-
-      const subCols = pillarSubColumns[activePillar.id] || [];
-      const sh45 = Number(((activePillar.weight100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
       const headers = [
         "Member Name",
         "Private Secret Code",
+        "Evaluation Type",
+        "Criterion",
+        "Points Earned",
+        "Points Out Of",
+        "Percentage Earned (of this item)",
+        "Weight (% out of 45%)",
+        "Score Gained (% of 45%)",
         "Team",
-        ...subCols.map((c) => `${c.title} (Out of ${c.maxScore})`),
-        `${activePillar.title} Total Score`,
-        `Pillar Share (Out of ${activePillar.weight100}%)`,
-        `Official 45% Share (Out of ${sh45}%)`
+        "Overall Rank",
+        "Total Video Score (100%)",
+        "Official Video Share (45%)"
       ];
 
-      const stats = calculateAllMemberStats();
-      const rows = stats.map((st) => {
-        const pt = st.pillarTotals[activePillar.id];
-        return [
-          st.name,
-          st.code,
-          "Video",
-          ...subCols.map((c) =>
-            pt.subBreakdown && pt.subBreakdown[c.id] !== null && pt.subBreakdown[c.id] !== undefined
-              ? pt.subBreakdown[c.id]
-              : ""
-          ),
-          `${pt.rawSum} / ${pt.maxSum}`,
-          `${pt.earnedOf100}%`,
-          `${pt.earnedOf45}%`
-        ];
+      const rows = [];
+      stats.forEach((st) => {
+        const base = [st.name, st.code];
+        const tail = ["Video", `#${st.overallRank}`, `${st.weightedTotalPct100}%`, `${st.videoShare45}%`];
+
+        pillars.forEach((p) => {
+          const pt = st.pillarTotals[p.id];
+          const items = [];
+
+          if (p.isTasksPillar) {
+            TASK_CRITERIA.forEach((c) => {
+              const cr = pt.criteria && pt.criteria[c.id];
+              items.push({ title: c.title, pts: cr && cr.graded ? cr.earned : null, max: cr ? cr.max : 0, weight: c.weight });
+            });
+          } else {
+            (pillarSubColumns[p.id] || []).forEach((sc) => {
+              const v = pt.subBreakdown ? pt.subBreakdown[sc.id] : null;
+              const mx = Number(sc.maxScore || 100);
+              items.push({
+                title: sc.title,
+                pts: v === null || v === undefined ? null : v,
+                max: mx,
+                weight: pt.maxSum > 0 ? (p.weight100 * mx) / pt.maxSum : 0
+              });
+            });
+          }
+
+          items.forEach((it) => {
+            const ratio = it.pts !== null && it.max > 0 ? it.pts / it.max : null;
+            rows.push([
+              ...base, p.title, it.title,
+              it.pts === null ? "" : it.pts,
+              it.max,
+              ratio === null ? "" : pct(ratio),
+              `${r2(it.weight)}%`,
+              `${ratio === null ? 0 : r2(ratio * it.weight)}%`,
+              ...tail
+            ]);
+          });
+
+          rows.push([
+            ...base, p.title, "PILLAR TOTAL",
+            pt.rawSum, pt.maxSum,
+            pct(pt.maxSum > 0 ? pt.rawSum / pt.maxSum : 0),
+            `${p.weight100}%`,
+            `${pt.earnedOf100}%`,
+            ...tail
+          ]);
+        });
+
+        if (!pillarId) {
+          rows.push([
+            ...base, "ALL PILLARS", "GRAND TOTAL",
+            st.videoShare45, VIDEO_OFFICIAL_SHARE,
+            pct(st.videoShare45 / VIDEO_OFFICIAL_SHARE),
+            `${VIDEO_OFFICIAL_SHARE}%`,
+            `${st.videoShare45}%`,
+            ...tail
+          ]);
+        }
       });
 
-      const safeName = activePillar.shortTitle.replace(/[^a-zA-Z0-9_-]/g, "_");
-      downloadCSVFile(`Enactus_Video_${safeName}_Evaluation.csv`, headers, rows);
-      showToast(`Exported ${activePillar.title} to Excel`, "📊");
+      const suffix = pillarId ? FIXED_PILLARS.find((p) => p.id === pillarId).shortTitle.replace(/[^a-zA-Z0-9_-]/g, "_") : "All";
+      downloadCSVFile(`Enactus_Video_Evaluation_Points_And_Percent_${suffix}.csv`, headers, rows);
+      showToast("Exported Evaluation (points & percentages) to Excel", "📊");
+    }
+
+    // 3) Export Currently Opened Mind Map Pillar (Alone)
+    function exportActivePillarExcel() {
+      if (activeMindMapPillarId === "ALL") {
+        exportEvaluationDetailedExcel();
+        return;
+      }
+      exportEvaluationDetailedExcel(activeMindMapPillarId);
     }
 
     // 4) Export 6-Pillars Summary Matrix
@@ -3478,7 +3627,7 @@
           `${t.title} - Timestamp`
         );
       });
-      headers.push("TASK QUALITY AND RELIABILITY Total", "TASK QUALITY AND RELIABILITY (20%)");
+      headers.push("TASK QUALITY AND RELIABILITY Total", "TASK QUALITY AND RELIABILITY (30%)");
 
       // Add all other 5 Pillars and their Sub-Columns
       FIXED_PILLARS.filter((p) => !p.isTasksPillar).forEach((p) => {

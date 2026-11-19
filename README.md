@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en" dir="ltr" class="dark">
 <head>
   <meta charset="UTF-8" />
@@ -7,7 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script id="portal-baked-state" type="application/json"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -238,11 +238,9 @@
         </span>
       </div>
 
-      <!-- Right: Cloud Sync Indicator + Team Badge -->
+      <!-- Right: Team Badge -->
       <div class="flex items-center gap-2">
-        <button onclick="pullFullStateFromCloud(true)" id="cloudSyncTopBadge" class="inline-flex items-center gap-1.5 bg-canvas-panel border border-canvas-border px-2.5 py-1.5 rounded-lg font-mono text-[10px] text-slate-400 hover:border-canvas-gold transition" title="Click to refresh live website data">
-          ● LOCAL STORAGE
-        </button>
+        <span id="syncStatus" class="font-mono text-[11px] px-2.5 py-1.5 rounded-lg border bg-canvas-panel text-slate-400 border-canvas-border">…</span>
         <div class="hidden sm:flex items-center gap-1.5 bg-canvas-panel border border-canvas-border px-2.5 py-1.5 rounded-lg font-mono text-[11px] text-canvas-blue">
           <span>TEAM:</span>
           <strong class="text-white">VIDEO</strong>
@@ -255,6 +253,16 @@
   <!-- ================= MAIN DIRECTOR'S VIEWPORT ================= -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-5 pb-28 relative z-10">
 
+    <!-- SETUP BANNER (shows only until a Google Sheet backend is connected) -->
+    <div id="setupBanner" class="hidden mb-5 bg-canvas-panel border-2 border-canvas-gold/60 rounded-2xl p-4 sm:p-5 space-y-2">
+      <div class="text-sm font-extrabold text-white">⚙️ Connect your Google Sheet</div>
+      <p class="text-xs text-slate-300">Paste the Apps Script <strong>Web App URL</strong> (ends with <code class="font-mono text-canvas-gold">/exec</code>). Until then, data is saved only in this browser.</p>
+      <div class="flex gap-2">
+        <input id="setupUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none" />
+        <button onclick="connectBackend('setupUrlInput')" class="bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs px-4 py-2 rounded-xl transition">Connect</button>
+      </div>
+    </div>
+
     <!-- ================= ENACTUS MENUFIYA UNIVERSITY HERO LOGO SHOWCASE BANNER ================= -->
     <div class="mb-5 vf-frame bg-canvas-panel border border-canvas-border rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
       <div class="vf-corner vf-tl"></div>
@@ -266,10 +274,15 @@
       <div class="flex items-center gap-4">
         <div class="logo-float w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-canvas-bg/90 border border-canvas-gold/40 flex items-center justify-center p-2 shadow-inner shrink-0">
           <svg viewBox="0 0 120 110" class="w-full h-full drop-shadow-[0_4px_12px_rgba(251,191,36,0.3)]" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Left Wing -->
             <polygon points="18,62 54,62 54,102" fill="#FBBF24"/>
+            <!-- Left Wing Inner Fold Shadow -->
             <polygon points="47,62 54,62 54,102" fill="#B45309"/>
+            <!-- Main Tall Sail -->
             <polygon points="54,4 54,102 100,62" fill="#FBBF24"/>
+            <!-- Right Fold Crease Shadow -->
             <polygon points="75,84 91,51 84,76" fill="#92400E"/>
+            <!-- Right Wing Tip -->
             <polygon points="84,76 91,51 107,62" fill="#FBBF24"/>
           </svg>
         </div>
@@ -417,7 +430,7 @@
           </span>
         </div>
 
-        <!-- Resubmit Notice -->
+        <!-- Resubmit Notice (Does NOT leak previous link or secret code) -->
         <div id="resubmitAlertBox" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2.5 text-xs text-amber-300 flex items-center justify-between gap-2">
           <span>⚠️ A submission is already recorded under your name for this task. Submitting again before the deadline will update your Google Drive link.</span>
         </div>
@@ -456,14 +469,14 @@
         </div>
       </div>
 
-      <!-- SUBMISSION RECEIPT CARD -->
+      <!-- SUBMISSION RECEIPT CARD (Shows Name, Task, Timestamp, Status ONLY — No Secret Code) -->
       <div id="submissionReceiptBox" class="hidden vf-frame bg-canvas-panel border-2 border-emerald-500/50 rounded-2xl p-5 sm:p-6 space-y-3 shadow-xl">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2.5">
             <span class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">✓</span>
             <div>
-              <h3 class="text-sm font-bold text-white">Task Submission Saved Permanently</h3>
-              <p class="text-[11px] text-slate-400">Your Google Drive link is now stored on the portal and visible to the Board.</p>
+              <h3 class="text-sm font-bold text-white">Task Submission Logged</h3>
+              <p class="text-[11px] text-slate-400">Your Google Drive link is now visible in the Board Grading Portal.</p>
             </div>
           </div>
           <span id="receiptRefBadge" class="font-mono text-xs font-bold px-2.5 py-1 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
@@ -485,8 +498,8 @@
             <div id="receiptTimeVal" class="font-mono text-emerald-400 mt-0.5">—</div>
           </div>
           <div>
-            <div class="text-slate-500 font-mono">STORAGE STATUS</div>
-            <div id="receiptStatusVal" class="font-mono font-bold text-canvas-blue mt-0.5">SAVED ON WEBSITE ✓</div>
+            <div class="text-slate-500 font-mono">STATUS</div>
+            <div id="receiptStatusVal" class="font-mono font-bold text-canvas-blue mt-0.5">ON-TIME // DELIVERED</div>
           </div>
         </div>
       </div>
@@ -516,11 +529,12 @@
           </p>
         </div>
 
-        <!-- Step 1: Select Task + Step 2: Enter Private Secret Code -->
+        <!-- Step 1: Select Task + Step 2: Enter Private Secret Code (With Eye Toggle & NO Public Code Hints) -->
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
           <div class="sm:col-span-5">
             <label class="block text-[11px] font-mono uppercase text-slate-400 mb-1">1. Select Task</label>
             <select id="lookupTaskSelect" class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-3 text-xs sm:text-sm font-semibold text-white focus:outline-none">
+              <!-- Populated dynamically from tasks list -->
             </select>
           </div>
 
@@ -541,7 +555,7 @@
           </div>
         </div>
 
-        <!-- Result Display Area -->
+        <!-- Result Display Area (Shows ONLY the selected task's grade & feedback) -->
         <div id="lookupSingleTaskResult" class="pt-1">
           <div class="bg-canvas-bg/70 border border-dashed border-canvas-border rounded-xl p-6 text-center text-xs text-slate-500 font-mono">
             Select a task above and enter your private Secret Code to view your personal task score and Board feedback.
@@ -591,11 +605,6 @@
           </button>
         </div>
 
-        <div class="pt-1">
-          <button onclick="quickUnlockDemo()" class="text-[11px] font-mono text-canvas-blue hover:underline">
-            🔓 Quick Fill Default Password (2026)
-          </button>
-        </div>
       </div>
 
       <!-- UNLOCKED BOARD COMMAND SUITE -->
@@ -609,11 +618,11 @@
               <span class="text-xs font-mono text-slate-400">Omar Shalaby &amp; Ali Afify</span>
             </div>
             <h2 class="text-lg font-extrabold text-white mt-1">
-              Tasks Grading, Multi-Criteria Matrix, Rankings &amp; Cloud Website Persistence
+              Tasks Grading, Multi-Criteria Matrix, Rankings &amp; Private Member Codes
             </h2>
           </div>
 
-          <!-- Sub-Navigation Buttons -->
+          <!-- Sub-Navigation Buttons (6 Board Tabs + Board-Only Test Lock) -->
           <div class="flex flex-wrap items-center gap-1.5 bg-canvas-bg p-1.5 rounded-xl border border-canvas-border">
             <button id="btab-grading" onclick="switchBoardTab('grading')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-canvas-gold text-canvas-bg transition">
               🎬 1. Grade Tasks &amp; Drive Links
@@ -631,14 +640,12 @@
               👥 5. Team Roster (Private Codes)
             </button>
             <button id="btab-security" onclick="switchBoardTab('security')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition">
-              🌐 6. Free Website &amp; Auto-Save Setup
-            </button>
-            <button onclick="pullFullStateFromCloud(true)" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-canvas-blue/20 hover:bg-canvas-blue hover:text-canvas-bg text-canvas-blue border border-canvas-blue/40 transition flex items-center gap-1" title="Pull latest website state from Cloud">
-              <span>🔄 Refresh Cloud</span>
+              🔐 6. Security &amp; Sheet
             </button>
             <button onclick="exportEverythingMasterExcel()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 hover:bg-emerald-500 hover:text-canvas-bg text-emerald-400 border border-emerald-500/40 transition flex items-center gap-1" title="Export All Data (Tasks, Drive Links, Evaluations & Rankings) to Excel">
               <span>⬇ Export All (Excel)</span>
             </button>
+            <button onclick="refreshFromServer()" class="px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-canvas-blue/15 hover:bg-canvas-blue hover:text-canvas-bg text-canvas-blue border border-canvas-blue/40 transition" title="Reload latest submissions from the Google Sheet">🔄 Sync</button>
             <button onclick="lockBoardPortal()" class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-red-400 hover:bg-red-500/10 transition">
               Lock 🔒
             </button>
@@ -669,9 +676,6 @@
               <span id="boardGradeSummaryPill" class="px-3 py-1.5 rounded-xl bg-canvas-bg border border-canvas-border text-slate-300">
                 Submitted: 0 / 0
               </span>
-              <button onclick="pullFullStateFromCloud(true)" class="bg-emerald-500/20 hover:bg-emerald-500 hover:text-canvas-bg text-emerald-400 border border-emerald-500/40 font-extrabold text-xs px-3 py-1.5 rounded-xl transition">
-                🔄 Refresh Live Submissions
-              </button>
               <button onclick="exportSingleTaskSubmissionsExcel()" class="bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs px-3 py-1.5 rounded-xl transition shadow">
                 ⬇ Export Current Task &amp; Drive Links (Excel)
               </button>
@@ -740,20 +744,23 @@
                     Fixed Weights: 20% + 15% + 15% + 25% + 15% + 10% = 100% (+ 55% HR)
                   </div>
                 </div>
+                <!-- Vertical Stem Line -->
                 <div class="w-0.5 h-5 bg-gradient-to-b from-canvas-gold to-canvas-blue"></div>
                 <div class="w-4/5 h-0.5 bg-gradient-to-r from-transparent via-canvas-border to-transparent hidden lg:block"></div>
               </div>
 
               <!-- 6 Fixed Pillar Nodes Grid -->
               <div id="mindMapPillarsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+                <!-- Populated dynamically by JS -->
               </div>
             </div>
 
-            <!-- ACTIVE DRILL-DOWN WORKSPACE -->
+            <!-- ACTIVE DRILL-DOWN WORKSPACE (Opens when any of the 6 Pillars is clicked, or shows Master Summary) -->
             <div id="pillarDrilldownToolbar" class="bg-canvas-bg border border-canvas-border rounded-xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <!-- Populated dynamically by JS -->
             </div>
 
-            <!-- Dynamic Table -->
+            <!-- Dynamic Table (Either Active Pillar Sub-Columns Table OR Master 6-Pillars Summary Table) -->
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse text-xs">
                 <thead id="matrixTableHead"></thead>
@@ -789,63 +796,8 @@
               </div>
             </div>
 
-            <!-- Top 3 Podium Cards -->
-            <div id="rankingsTop3Podium" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-
-            <!-- Full Rankings Table -->
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead id="rankingsTableHead" class="bg-canvas-elevated text-slate-300 border-b border-canvas-border"></thead>
-                <tbody id="rankingsTableBody" class="divide-y divide-canvas-border"></tbody>
-              </table>
-            </div>
+            <div id="boardTasksManagerList" class="space-y-3"></div>
           </div>
-        </div>
-
-        <!-- =============================================================
-             BOARD SUB-TAB 4: UNLIMITED TASKS MANAGER
-             ============================================================= -->
-        <div id="bpanel-tasks" class="hidden space-y-5">
-          <div class="bg-canvas-panel border border-canvas-border rounded-2xl p-5 sm:p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-canvas-border pb-3">
-              <div>
-                <span class="font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-canvas-gold/15 text-canvas-gold border border-canvas-gold/30">
-                  UNLIMITED TASKS CREATOR
-                </span>
-                <h3 class="text-base sm:text-lg font-extrabold text-white mt-1">
-                  Add New Task to Portal
-                </h3>
-              </div>
-              <span id="tasksTotalCountBadge" class="font-mono text-xs font-bold text-canvas-blue">3 Tasks</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-              <div class="md:col-span-4">
-                <label class="block text-[11px] font-mono text-slate-400 mb-1">Task Title *</label>
-                <input id="newTaskTitleInput" type="text" placeholder="e.g. Task 04: Color Grading & LUTs" class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none" />
-              </div>
-              <div class="md:col-span-4">
-                <label class="block text-[11px] font-mono text-slate-400 mb-1">Task Brief / Instructions</label>
-                <input id="newTaskBriefInput" type="text" placeholder="Short description of deliverables..." class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none" />
-              </div>
-              <div class="md:col-span-2">
-                <label class="block text-[11px] font-mono text-slate-400 mb-1">Score Out Of</label>
-                <input id="newTaskMaxInput" type="number" value="100" min="1" max="1000" class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2.5 text-xs font-mono font-bold text-canvas-gold focus:outline-none" />
-              </div>
-              <div class="md:col-span-2">
-                <label class="block text-[11px] font-mono text-slate-400 mb-1">Deadline</label>
-                <input id="newTaskDeadlineInput" type="datetime-local" value="2026-12-15T23:59" class="w-full bg-canvas-bg border border-canvas-border focus:border-canvas-gold rounded-xl px-2.5 py-2.5 text-xs font-mono text-white focus:outline-none" />
-              </div>
-            </div>
-
-            <div class="flex justify-end">
-              <button onclick="createNewTaskItem()" class="bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow">
-                ➕ Create &amp; Publish Task
-              </button>
-            </div>
-          </div>
-
-          <div id="boardTasksManagerList" class="space-y-3"></div>
         </div>
 
         <!-- =============================================================
@@ -860,7 +812,7 @@
                   <span class="font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-canvas-gold/15 text-canvas-gold border border-canvas-gold/30">
                     BOARD EYES ONLY // PRIVATE SECRET CODES
                   </span>
-                  <span id="rosterTotalBadge" class="font-mono text-xs font-bold text-canvas-blue">0 Members</span>
+                  <span id="rosterTotalBadge" class="font-mono text-xs font-bold text-canvas-blue">10 Members</span>
                 </div>
                 <h3 class="text-base sm:text-lg font-extrabold text-white mt-1">
                   Video Team Roster &amp; Private Member Secret Codes
@@ -883,29 +835,22 @@
               </div>
             </div>
 
-            <!-- Add New Member Row -->
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end bg-canvas-bg border border-canvas-border rounded-xl p-3.5">
-              <div class="sm:col-span-5">
-                <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">New Member Full Name *</label>
-                <input id="rosterNewName" type="text" placeholder="e.g. Ahmed Mohamed" onkeydown="if(event.key==='Enter') addNewMemberToRoster()" class="w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none" />
+            <!-- ADD MEMBER FORM -->
+            <div class="bg-canvas-bg border border-canvas-gold/30 rounded-xl p-4 space-y-3">
+              <div class="text-xs font-mono font-bold uppercase text-canvas-gold">➕ Add Member</div>
+              <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                <input id="rosterNewName" type="text" placeholder="Member full name" onkeydown="if(event.key==='Enter') addNewMemberToRoster()" class="sm:col-span-6 bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none" />
+                <input id="rosterNewCode" type="text" placeholder="Secret code (auto)" class="sm:col-span-3 bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-canvas-gold uppercase focus:outline-none" />
+                <button onclick="addNewMemberToRoster()" class="sm:col-span-3 bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-sm py-2.5 rounded-xl transition">Add Member</button>
               </div>
-              <div class="sm:col-span-4">
-                <label class="block text-[10px] font-mono uppercase text-slate-400 mb-1">Private Secret Code (Auto or Custom)</label>
-                <div class="flex gap-1.5">
-                  <input id="rosterNewCode" type="text" placeholder="VID-4829" class="w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3 py-2 text-xs font-mono font-bold text-canvas-gold uppercase focus:outline-none" />
-                  <button type="button" onclick="fillRandomNewMemberCode()" class="px-2.5 py-2 rounded-xl bg-canvas-panel border border-canvas-border text-slate-300 hover:text-white text-xs font-mono" title="Generate Random Code">
-                    🎲
-                  </button>
-                </div>
-              </div>
-              <div class="sm:col-span-3">
-                <button onclick="addNewMemberToRoster()" class="w-full bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs py-2.5 px-4 rounded-xl transition shadow">
-                  + Add Member
-                </button>
-              </div>
+              <details class="text-xs text-slate-300">
+                <summary class="cursor-pointer font-mono text-canvas-blue">Add many at once (one name per line)</summary>
+                <textarea id="rosterBulkNames" rows="5" placeholder="Ahmed Ali&#10;Sara Mohamed&#10;..." class="mt-2 w-full bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none"></textarea>
+                <button onclick="addBulkMembersToRoster()" class="mt-2 bg-canvas-blue hover:bg-sky-300 text-canvas-bg font-extrabold text-xs px-4 py-2 rounded-xl transition">Add All Names</button>
+              </details>
             </div>
 
-            <!-- Roster Table -->
+            <!-- Roster Table with Inline Editable Secret Codes & Copy Individual WhatsApp Message -->
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse text-xs">
                 <thead>
@@ -918,6 +863,7 @@
                   </tr>
                 </thead>
                 <tbody id="rosterTableBody" class="divide-y divide-canvas-border">
+                  <!-- Populated by JS -->
                 </tbody>
               </table>
             </div>
@@ -926,169 +872,20 @@
         </div>
 
         <!-- =============================================================
-             BOARD SUB-TAB 6: FREE LIVE WEBSITE HOSTING & PERMANENT CLOUD SAVE
+             BOARD SUB-TAB 6: SECURITY (PASSWORD CHANGE) & GOOGLE SHEETS SYNC
              ============================================================= -->
         <div id="bpanel-security" class="hidden space-y-5">
           
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
             
-            <!-- Left 7 Cols: Full-Website Permanent Cloud Storage (1-Click Cloud OR Google Apps Script All-in-One) -->
-            <div class="lg:col-span-7 bg-canvas-panel border-2 border-canvas-gold/50 rounded-2xl p-5 space-y-5">
-              <div class="border-b border-canvas-border pb-3 flex items-center justify-between">
-                <div>
-                  <span class="font-mono text-[10px] font-bold uppercase px-2.5 py-0.5 rounded bg-canvas-gold text-canvas-bg">
-                    SOLVED // 2 GUARANTEED WAYS TO HOST &amp; AUTO-SAVE
-                  </span>
-                  <h3 class="text-base font-extrabold text-white mt-1">
-                    ☁️ الحل النهائي لتحويل الموقع لويبسايت وحفظ الداتا واللينكات تلقائياً
-                  </h3>
-                  <p class="text-xs text-slate-300 mt-0.5">
-                    اختر <strong>الطريقة (أ)</strong> لتفعيل الحفظ السحابي بضغطة زر واحدة من داخل الموقع، أو <strong>الطريقة (ب)</strong> لرفع الموقع وقاعدة البيانات معاً على سيرفر جوجل مجاناً في لينك واحد.
-                  </p>
-                </div>
-              </div>
-
-              <!-- OPTION A: 1-CLICK AUTO CLOUD DATABASE -->
-              <div class="bg-canvas-bg border border-emerald-500/40 rounded-xl p-4 space-y-3">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <span class="font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-                      الطريقة (أ) — الأسرع (بدون جوجل سكريبت وبدون Firebase)
-                    </span>
-                    <h4 class="text-xs sm:text-sm font-extrabold text-white mt-1">
-                      ⚡ تفعيل الحفظ السحابي الفوري بضغطة واحدة
-                    </h4>
-                  </div>
-                  <button onclick="activateOneClickCloudSync()" id="oneClickCloudBtn" class="bg-emerald-500 hover:bg-emerald-400 text-canvas-bg font-extrabold text-xs px-4 py-2.5 rounded-xl transition shadow-lg">
-                    ⚡ تفعيل الحفظ السحابي تلقائياً الآن
-                  </button>
-                </div>
-                <p class="text-[11px] text-slate-400">
-                  اضغط على الزرار الأخضر فوق، هيولّد لك لينك حفظ سحابي جاهز تلقائياً في الخانة تحت، وبعدها اضغط <strong>Download Ready index.html</strong> وارفعه على أي استضافة.
-                </p>
-
-                <div>
-                  <label class="block text-[11px] font-mono text-slate-300 mb-1">
-                    رابط الحفظ السحابي المتصل حالياً (Cloud Database URL):
-                  </label>
-                  <div class="flex flex-wrap gap-2">
-                    <input id="sheetWebhookInput" type="url" placeholder="اضغط 'تفعيل الحفظ السحابي تلقائياً' أو الصق رابط Google Script..." class="flex-1 bg-canvas-panel border border-canvas-border focus:border-canvas-gold rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none" />
-                    <button onclick="saveWebhookUrl()" class="bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
-                      💾 حفظ الرابط
-                    </button>
-                    <button onclick="pullFullStateFromCloud(true)" class="bg-canvas-blue hover:bg-sky-300 text-canvas-bg font-extrabold text-xs px-3.5 py-2 rounded-xl transition">
-                      🔄 اختبار وتحديث
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- OPTION B: GOOGLE APPS SCRIPT ALL-IN-ONE (WEBSITE + DATABASE IN 1 GOOGLE LINK) -->
-              <div class="bg-canvas-bg border border-canvas-gold/40 rounded-xl p-4 space-y-3">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <span class="font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-canvas-gold/20 text-canvas-gold">
-                      الطريقة (ب) — الأضمن 100% (الموقع + الحفظ في لينك جوجل واحد بدون مواقع خارجية!)
-                    </span>
-                    <h4 class="text-xs sm:text-sm font-extrabold text-white mt-1">
-                      🚀 استضافة الموقع كامل + قاعدة البيانات على Google Apps Script مباشر
-                    </h4>
-                  </div>
-                </div>
-
-                <ol class="text-[11px] text-slate-300 space-y-1.5 list-decimal list-inside bg-canvas-panel/80 p-3 rounded-xl border border-canvas-border">
-                  <li>افتح <a href="https://script.google.com" target="_blank" class="text-canvas-gold underline font-bold">script.google.com</a> واضغط <strong>New Project</strong>.</li>
-                  <li>امسح الكود اللي في ملف <code class="text-canvas-gold font-mono">Code.gs</code>، واضغط الزرار الأول تحت <strong>(1. نسخ كود Code.gs)</strong> واعمله Paste هناك.</li>
-                  <li>من القائمة الجانبية جنب كلمة <strong>Files</strong> اضغط علامة <strong>(+)</strong> واختار <strong>HTML</strong>، واكتب اسمه <code class="text-emerald-400 font-mono font-bold">index</code> (بالحروف الصغيرة).</li>
-                  <li>امسح أي كلام جوه ملف <code class="text-emerald-400 font-mono">index.html</code>، واضغط الزرار التاني تحت <strong>(2. نسخ كود الموقع كامل)</strong> واعمله Paste جواه واضغط علامة الحفظ 💾.</li>
-                  <li>اضغط فوق على <strong>Deploy</strong> &larr; <strong>New deployment</strong> &larr; اختر <strong>Web app</strong> &larr; خلي <em>Execute as: Me</em> وخلي <em>Who has access: Anyone</em> واضغط <strong>Deploy</strong>.</li>
-                  <li><strong>مبروك!</strong> اللينك اللي جوجل هيديهولك هو <strong>ويبسايت كامل شغال</strong> ابعته للتيم، وأي لينك درايف أو اسم أو درجة هتتحفظ جواه تلقائياً للأبد!</li>
-                </ol>
-
-                <div class="flex flex-wrap gap-2 pt-1">
-                  <button onclick="copyAppsScriptCode()" class="flex-1 bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs px-3.5 py-2.5 rounded-xl transition shadow text-center">
-                    📋 1. نسخ كود السيرفر (Code.gs المصلح)
-                  </button>
-                  <button onclick="copyFullWebsiteHtmlForGoogleScript()" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-canvas-bg font-extrabold text-xs px-3.5 py-2.5 rounded-xl transition shadow text-center">
-                    📋 2. نسخ كود الموقع لملف (index.html)
-                  </button>
-                </div>
-
-                <pre id="appsScriptCodeBlock" class="bg-canvas-panel border border-canvas-border rounded-xl p-3 text-[10px] font-mono text-slate-300 overflow-x-auto max-h-40">function doGet(e) {
-  if (e && e.parameter && e.parameter.action === "getState") {
-    return ContentService.createTextOutput(loadPortalStateServer())
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-  try {
-    return HtmlService.createHtmlOutputFromFile("index")
-      .setTitle("Enactus Video Team — Director's Canvas Portal")
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-      .addMetaTag("viewport", "width=device-width, initial-scale=1");
-  } catch (err) {
-    return ContentService.createTextOutput(loadPortalStateServer())
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doPost(e) {
-  var lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    var body = JSON.parse(e.postData.contents);
-    if (body.fullPortalState) {
-      savePortalStateServer(JSON.stringify(body.fullPortalState));
-    }
-    return ContentService.createTextOutput(JSON.stringify({ status: "OK" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "ERROR", message: String(err) }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function savePortalStateServer(jsonStr) {
-  var props = PropertiesService.getScriptProperties();
-  var chunkSize = 8000;
-  var totalChunks = Math.ceil(jsonStr.length / chunkSize);
-  for (var i = 0; i < totalChunks; i++) {
-    props.setProperty("STATE_CHUNK_" + i, jsonStr.slice(i * chunkSize, (i + 1) * chunkSize));
-  }
-  props.setProperty("STATE_CHUNK_COUNT", String(totalChunks));
-  return "OK";
-}
-
-function loadPortalStateServer() {
-  var props = PropertiesService.getScriptProperties();
-  var count = Number(props.getProperty("STATE_CHUNK_COUNT") || "0");
-  if (!count) {
-    var legacy = props.getProperty("PORTAL_STATE_JSON");
-    return legacy ? legacy : JSON.stringify({ empty: true });
-  }
-  var out = "";
-  for (var i = 0; i < count; i++) {
-    out += props.getProperty("STATE_CHUNK_" + i) || "";
-  }
-  return out || JSON.stringify({ empty: true });
-}</pre>
-              </div>
-
-              <div class="pt-1 flex flex-wrap gap-2">
-                <button onclick="downloadPortalFileForMembers()" class="bg-canvas-blue hover:bg-sky-300 text-canvas-bg font-extrabold text-xs px-4 py-2.5 rounded-xl transition shadow">
-                  💾 Download Ready index.html (With Cloud URL Baked In)
-                </button>
-              </div>
-            </div>
-
-            <!-- Right 5 Cols: Change Board Password -->
+            <!-- Left 5 Cols: Change Board Password -->
             <div class="lg:col-span-5 bg-canvas-panel border border-canvas-border rounded-2xl p-5 space-y-4">
               <div class="border-b border-canvas-border pb-3">
                 <span class="font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-canvas-gold/15 text-canvas-gold border border-canvas-gold/30">
                   ACCESS CONTROL
                 </span>
                 <h3 class="text-base font-extrabold text-white mt-1">🔑 Change Board Portal Password</h3>
-                <p class="text-xs text-slate-400">Enter the current password (first-time default: <code class="text-canvas-gold font-mono">2026</code>) to set your new Board password.</p>
+                <p class="text-xs text-slate-400">Enter the current password to set your new Board password.</p>
               </div>
 
               <div class="space-y-3">
@@ -1109,6 +906,31 @@ function loadPortalStateServer() {
                   Update Board Password
                 </button>
               </div>
+            </div>
+
+            <!-- Right 7 Cols: Google Sheet status -->
+            <div class="lg:col-span-7 bg-canvas-panel border border-canvas-border rounded-2xl p-5 space-y-3">
+              <div class="border-b border-canvas-border pb-3">
+                <span class="font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-canvas-blue/15 text-canvas-blue border border-canvas-blue/30">
+                  GOOGLE SHEET DATABASE
+                </span>
+                <h3 class="text-base font-extrabold text-white mt-1">☁️ Data is stored in your Google Sheet</h3>
+                <p class="text-xs text-slate-400">Every submission and every Board edit is saved automatically. Open the Sheet to see tabs: <code class="text-canvas-gold font-mono">Submissions</code>, <code class="text-canvas-gold font-mono">Members</code>, <code class="text-canvas-gold font-mono">Tasks</code>, <code class="text-canvas-gold font-mono">Pillar Scores</code>. To get an Excel file: Google Sheet → File → Download → .xlsx.</p>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-[11px] font-mono text-slate-400">Web App URL (current: <span id="currentApiLabel" class="text-canvas-blue"></span>)</label>
+                <div class="flex flex-wrap gap-2">
+                  <input id="settingsUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 min-w-[200px] bg-canvas-bg border border-canvas-border focus:border-canvas-blue rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none" />
+                  <button onclick="connectBackend('settingsUrlInput')" class="bg-canvas-blue hover:bg-sky-300 text-canvas-bg font-extrabold text-xs px-4 py-2 rounded-xl transition">Save &amp; Reconnect</button>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button onclick="copyShareLink()" class="bg-canvas-gold hover:bg-amber-400 text-canvas-bg font-extrabold text-xs px-4 py-2 rounded-xl transition">🔗 Copy Member Share Link</button>
+                  <button onclick="disconnectBackend()" class="text-red-400 hover:bg-red-500/10 font-mono text-xs font-bold px-3 py-2 rounded-xl transition">Disconnect</button>
+                </div>
+                <p class="text-[11px] text-slate-500">The share link contains the backend URL, so members just open it once — no code editing needed.</p>
+              </div>
+              <p class="text-xs text-slate-300">Board password and member secret codes are checked on the server — they are never sent to visitors.</p>
+              <p class="text-xs text-slate-400">Use <strong class="text-canvas-blue">🔄 Sync</strong> at the top to pull submissions that arrived while you were on this page.</p>
             </div>
 
           </div>
@@ -1244,6 +1066,7 @@ function loadPortalStateServer() {
       }
     ];
 
+    // Sub-columns inside each of the 5 non-task Pillars (Board can rename, change max score, delete, or add unlimited sub-columns)
     const initialPillarSubColumns = {
       "PIL-ALIGN": [
         { id: "SUB-ALIGN-01", title: "Brand & Goal Alignment", maxScore: 100 },
@@ -1267,8 +1090,13 @@ function loadPortalStateServer() {
       ]
     };
 
+    // Unified Video Team Roster (Empty by default so the Board adds members freely)
     const initialMembers = [];
+
+    // Task Submissions & Task Grades (Empty by default)
     const initialSubmissions = [];
+
+    // Member scores for sub-columns inside the 5 non-task Pillars: { [memberCode]: { [subColId]: number } }
     const initialPillarScores = {};
 
     // Runtime State
@@ -1277,99 +1105,128 @@ function loadPortalStateServer() {
     let members = [];
     let submissions = [];
     let pillarScores = {};
-    let activeMindMapPillarId = "PIL-TASKS";
+    let activeMindMapPillarId = "PIL-TASKS"; // Can be 'ALL' or one of the 6 FIXED_PILLARS IDs
     let activeSubmitTaskId = "TASK-01";
     let activeBoardGradeTaskId = "TASK-01";
     let testDeadlineLockActive = false;
     let boardUnlocked = false;
     let boardPassword = "2026";
-    let sheetWebhookUrl = "";
 
-    const STORAGE_KEY = "enactus_director_canvas_portal_v9";
+    const STORAGE_KEY = "enactus_director_canvas_portal_v8";
 
     // -----------------------------------------------------------------
-    // 2. INITIALIZATION & FULL-WEBSITE CLOUD PERSISTENCE
+    // 2. INITIALIZATION & STORAGE
     // -----------------------------------------------------------------
-    async function initApp() {
-      try {
-        const bakedEl = document.getElementById("portal-baked-state");
-        const bakedData = bakedEl && bakedEl.textContent.trim() ? JSON.parse(bakedEl.textContent) : null;
-        const raw = localStorage.getItem(STORAGE_KEY);
+    // ===== BACKEND CONFIG =====
+    // الصق هنا رابط الـ Web App بتاع Google Apps Script (بينتهي بـ /exec).
+    // لو سبته فاضي، الموقع بيشتغل محلياً على المتصفح بس (localStorage) للتجربة.
+    const BAKED_API_URL = "https://script.google.com/macros/s/AKfycbyTi4X45hXBI_Lv5BaFjs4VfNI2JWvl8Tj5UVjqI62n-K7JdRG2qTy2IqtaD0wk9let/exec"; // اختياري: لو لصقت الرابط هنا مش هتحتاج ?api= ولا الإعداد من الصفحة
+    let API_URL = BAKED_API_URL;
+    try {
+      const q = new URLSearchParams(location.search).get("api");
+      if (q && /^https:\/\/script\.google\.com\//.test(q)) localStorage.setItem("portal_api_url", q);
+      if (!API_URL) API_URL = localStorage.getItem("portal_api_url") || "";
+    } catch (e) {}
 
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          tasks = parsed.tasks?.length ? parsed.tasks : (bakedData?.tasks || JSON.parse(JSON.stringify(initialTasks)));
-          pillarSubColumns = parsed.pillarSubColumns || bakedData?.pillarSubColumns || JSON.parse(JSON.stringify(initialPillarSubColumns));
-          members = Array.isArray(parsed.members) && parsed.members.length ? parsed.members : (bakedData?.members || []);
-          submissions = Array.isArray(parsed.submissions) ? parsed.submissions : (bakedData?.submissions || []);
-          pillarScores = parsed.pillarScores || bakedData?.pillarScores || {};
-          boardPassword = parsed.boardPassword || bakedData?.boardPassword || "2026";
-          sheetWebhookUrl = parsed.sheetWebhookUrl || bakedData?.sheetWebhookUrl || "";
-        } else if (bakedData) {
-          tasks = bakedData.tasks?.length ? bakedData.tasks : JSON.parse(JSON.stringify(initialTasks));
-          pillarSubColumns = bakedData.pillarSubColumns || JSON.parse(JSON.stringify(initialPillarSubColumns));
-          members = Array.isArray(bakedData.members) ? bakedData.members : [];
-          submissions = Array.isArray(bakedData.submissions) ? bakedData.submissions : [];
-          pillarScores = bakedData.pillarScores || {};
-          boardPassword = bakedData.boardPassword || "2026";
-          sheetWebhookUrl = bakedData.sheetWebhookUrl || "";
-        } else {
-          resetToDefaults();
-        }
-      } catch (e) {
-        resetToDefaults();
+    function connectBackend(inputId) {
+      const v = (document.getElementById(inputId)?.value || "").trim();
+      if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(v)) {
+        showToast("Paste the Web App URL (ends with /exec)", "!");
+        return;
       }
+      try { localStorage.setItem("portal_api_url", v); } catch (e) {}
+      location.href = location.pathname + "?api=" + encodeURIComponent(v);
+    }
 
-      normalizePortalState();
+    function disconnectBackend() {
+      try { localStorage.removeItem("portal_api_url"); } catch (e) {}
+      location.href = location.pathname;
+    }
 
-      activeSubmitTaskId = tasks[0]?.id || "TASK-01";
-      activeBoardGradeTaskId = tasks[0]?.id || "TASK-01";
+    function copyShareLink() {
+      if (!API_URL) { showToast("Connect a Google Sheet first", "!"); return; }
+      copyTextSafe(location.origin + location.pathname + "?api=" + encodeURIComponent(API_URL), "Share link copied — send it to members");
+    }
 
-      const whEl = document.getElementById("sheetWebhookInput");
-      if (whEl) whEl.value = sheetWebhookUrl;
+    let boardPasswordSession = ""; // الباسورد بيفضل في الذاكرة بس بعد الفتح
+    let syncTimer = null, syncInFlight = false, syncDirty = false;
 
-      updateCloudSyncBadge();
+    async function api(payload) {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, // بدون preflight
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
+    function setSyncStatus(kind, text) {
+      const el = document.getElementById("syncStatus");
+      if (!el) return;
+      const cls = {
+        ok: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+        busy: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+        err: "bg-red-500/15 text-red-400 border-red-500/40",
+        off: "bg-canvas-panel text-slate-400 border-canvas-border"
+      }[kind];
+      el.className = "font-mono text-[11px] px-2.5 py-1.5 rounded-lg border " + cls;
+      el.textContent = text;
+    }
+
+    function applyDefaultsAfterLoad() {
+      if (!tasks.length) tasks = JSON.parse(JSON.stringify(initialTasks));
+      members.forEach((m, idx) => { if (!m.id) m.id = `MEM-${String(idx + 1).padStart(2, "0")}`; });
+      tasks.forEach((t) => { if (!t.maxScore || isNaN(Number(t.maxScore))) t.maxScore = 100; });
+      FIXED_PILLARS.forEach((p) => {
+        if (!p.isTasksPillar && !Array.isArray(pillarSubColumns[p.id])) {
+          pillarSubColumns[p.id] = JSON.parse(JSON.stringify(initialPillarSubColumns[p.id] || []));
+        }
+      });
+      if (!tasks.some((t) => t.id === activeSubmitTaskId)) activeSubmitTaskId = tasks[0]?.id || "TASK-01";
+      if (!tasks.some((t) => t.id === activeBoardGradeTaskId)) activeBoardGradeTaskId = tasks[0]?.id || "TASK-01";
+    }
+
+    async function initApp() {
+      resetToDefaults();
+      if (API_URL) {
+        setSyncStatus("busy", "⏳ Connecting…");
+        try {
+          const r = await api({ action: "load" });
+          if (!r.ok) throw new Error(r.error);
+          const st = r.state;
+          tasks = st.tasks || [];
+          members = st.members || [];
+          submissions = st.submissions || [];
+          pillarSubColumns = {};
+          pillarScores = {};
+          setSyncStatus("ok", "☁ Online");
+        } catch (e) {
+          setSyncStatus("err", "⚠ Server unreachable");
+          const why = e instanceof SyntaxError ? "Server returned a login/HTML page — set Who has access = Anyone, then redeploy"
+            : (e && e.message && e.message !== "Failed to fetch" ? "Server error: " + e.message : "Request blocked — check the /exec URL and that the deployment is public");
+          showToast(why, "!");
+          console.error("Backend load failed:", e);
+        }
+      } else {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const p = JSON.parse(raw);
+            tasks = p.tasks || []; pillarSubColumns = p.pillarSubColumns || {}; members = p.members || [];
+            submissions = p.submissions || []; pillarScores = p.pillarScores || {};
+            boardPassword = p.boardPassword || "2026";
+          }
+        } catch (e) {}
+        setSyncStatus("off", "💾 Local mode");
+      }
+      applyDefaultsAfterLoad();
+      document.getElementById("setupBanner")?.classList.toggle("hidden", !!API_URL);
+      const lbl = document.getElementById("currentApiLabel");
+      if (lbl) lbl.textContent = API_URL ? API_URL.slice(0, 48) + "…" : "not connected";
       fillRandomNewMemberCode();
       refreshAllSelectorsAndViews();
       tickDeadlineClock();
       setInterval(tickDeadlineClock, 1000);
-
-      // Automatically load full website state if running inside Google Apps Script OR connected to Cloud URL
-      if (isRunningInsideGoogleAppsScript() || sheetWebhookUrl) {
-        await pullFullStateFromCloud(false);
-      }
-    }
-
-    function isRunningInsideGoogleAppsScript() {
-      return !!(window.google && window.google.script && window.google.script.run);
-    }
-
-    function normalizePortalState() {
-      members.forEach((m, idx) => {
-        if (!m.id) m.id = `MEM-${String(idx + 1).padStart(2, "0")}`;
-      });
-      tasks.forEach((t) => {
-        if (!t.maxScore || isNaN(Number(t.maxScore))) t.maxScore = 100;
-      });
-      FIXED_PILLARS.forEach((p) => {
-        if (!p.isTasksPillar) {
-          if (!Array.isArray(pillarSubColumns[p.id])) {
-            pillarSubColumns[p.id] = JSON.parse(JSON.stringify(initialPillarSubColumns[p.id] || []));
-          }
-        }
-      });
-    }
-
-    function updateCloudSyncBadge() {
-      const badge = document.getElementById("cloudSyncTopBadge");
-      if (!badge) return;
-      if (isRunningInsideGoogleAppsScript() || sheetWebhookUrl) {
-        badge.textContent = "🟢 LIVE WEBSITE CLOUD SAVED";
-        badge.className = "inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/40 px-2.5 py-1.5 rounded-lg font-mono text-[10px] font-bold text-emerald-400 hover:bg-emerald-500/25 transition";
-      } else {
-        badge.textContent = "● LOCAL STORAGE";
-        badge.className = "inline-flex items-center gap-1.5 bg-canvas-panel border border-canvas-border px-2.5 py-1.5 rounded-lg font-mono text-[10px] text-slate-400 hover:border-canvas-gold transition";
-      }
     }
 
     function resetToDefaults() {
@@ -1379,317 +1236,62 @@ function loadPortalStateServer() {
       submissions = JSON.parse(JSON.stringify(initialSubmissions));
       pillarScores = JSON.parse(JSON.stringify(initialPillarScores));
       boardPassword = "2026";
-      sheetWebhookUrl = "";
     }
 
-    function getFullStateObject() {
-      return {
-        tasks,
-        pillarSubColumns,
-        members,
-        submissions,
-        pillarScores,
-        boardPassword,
-        updatedAt: Date.now()
-      };
-    }
-
-    function saveState(syncToCloud = true, optionalRecord = null) {
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            ...getFullStateObject(),
-            sheetWebhookUrl
-          })
-        );
-      } catch (e) {}
-
-      if (syncToCloud && (isRunningInsideGoogleAppsScript() || sheetWebhookUrl)) {
-        pushFullStateToCloud(optionalRecord);
-      }
-    }
-
-    function isFirebaseUrl(url) {
-      return /firebaseio\.com|firebasedatabase\.app/i.test(url || "");
-    }
-
-    function isJsonBlobUrl(url) {
-      return /jsonblob\.com\/api\/jsonBlob/i.test(url || "");
-    }
-
-    async function activateOneClickCloudSync() {
-      const btn = document.getElementById("oneClickCloudBtn");
-      if (btn) btn.textContent = "⏳ جاري إنشاء قاعدة البيانات السحابية...";
-      try {
-        const initialPayload = getFullStateObject();
-        const res = await fetch("https://jsonblob.com/api/jsonBlob", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify(initialPayload)
-        });
-
-        let blobUrl = res.headers.get("Location") || res.headers.get("location") || res.headers.get("X-jsonblob");
-        if (blobUrl && !blobUrl.startsWith("http")) {
-          blobUrl = `https://jsonblob.com/api/jsonBlob/${blobUrl.replace(/^\/+/, "")}`;
-        }
-        if (blobUrl && blobUrl.startsWith("http:")) {
-          blobUrl = blobUrl.replace(/^http:/i, "https:");
-        }
-
-        if (!blobUrl) {
-          throw new Error("No Location header");
-        }
-
-        sheetWebhookUrl = blobUrl;
-        const inputEl = document.getElementById("sheetWebhookInput");
-        if (inputEl) inputEl.value = sheetWebhookUrl;
-        saveState(false);
-        updateCloudSyncBadge();
-        if (btn) btn.textContent = "✓ تم التفعيل والربط السحابي بنجاح!";
-        showToast("تم تفعيل الحفظ السحابي الفوري بنجاح!", "⚡");
-      } catch (err) {
-        if (btn) btn.textContent = "⚡ تفعيل الحفظ السحابي تلقائياً الآن";
-        showToast("شبكتك تحجب الإنشاء التلقائي — استخدم الطريقة (ب) عبر جوجل سكريبت المضمونة 100%", "!");
-      }
-    }
-
-    function copyFullWebsiteHtmlForGoogleScript() {
-      const payload = {
-        ...getFullStateObject(),
-        sheetWebhookUrl
-      };
-
-      const clone = document.documentElement.cloneNode(true);
-      const bakedScript = clone.querySelector("#portal-baked-state");
-      if (bakedScript) {
-        bakedScript.textContent = JSON.stringify(payload);
-      }
-
-      const scSubmit = clone.querySelector("#scene-submit");
-      const scGrade = clone.querySelector("#scene-grade");
-      const scBoard = clone.querySelector("#scene-board");
-      if (scSubmit) scSubmit.classList.remove("hidden");
-      if (scGrade) scGrade.classList.add("hidden");
-      if (scBoard) scBoard.classList.add("hidden");
-
-      const lockCard = clone.querySelector("#boardLockCard");
-      const unlockedSuite = clone.querySelector("#boardUnlockedSuite");
-      if (lockCard) lockCard.classList.remove("hidden");
-      if (unlockedSuite) unlockedSuite.classList.add("hidden");
-
-      const htmlString = "<!DOCTYPE html>\n" + clone.outerHTML;
-      copyTextSafe(htmlString, "تم نسخ كود الموقع بالكامل! الصقه داخل ملف index.html في Google Apps Script");
-    }
-
-    async function pushFullStateToCloud(optionalRecord = null) {
-      const fullPortalState = getFullStateObject();
-
-      // 1. Native Google Apps Script Hosting Mode (Zero CORS, 100% Reliable)
-      if (isRunningInsideGoogleAppsScript()) {
-        return new Promise((resolve) => {
-          window.google.script.run
-            .withSuccessHandler(() => resolve(true))
-            .withFailureHandler(() => resolve(false))
-            .savePortalStateServer(JSON.stringify(fullPortalState));
-        });
-      }
-
-      if (!sheetWebhookUrl) return;
-      try {
-        if (isJsonBlobUrl(sheetWebhookUrl)) {
-          await fetch(sheetWebhookUrl, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json"
-            },
-            body: JSON.stringify(fullPortalState)
-          });
-        } else if (isFirebaseUrl(sheetWebhookUrl)) {
-          const cleanBase = sheetWebhookUrl.replace(/\/+$/, "").replace(/\.json$/i, "");
-          await fetch(`${cleanBase}/enactusPortalState.json`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(fullPortalState)
-          });
-        } else {
-          await fetch(sheetWebhookUrl, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-              fullPortalState,
-              record: optionalRecord
-            })
-          });
-        }
-      } catch (e) {}
-    }
-
-    async function pullFullStateFromCloud(showNotification = true) {
-      if (!isRunningInsideGoogleAppsScript() && !sheetWebhookUrl) {
-        if (showNotification) showToast("يرجى تفعيل الحفظ السحابي من تاب رقم 6 أولاً", "!");
+    // saveState بيتنادى من كل تعديل بيعمله البورد. بيتجمّع ويتبعت للشيت بعد ثانية.
+    function saveState() {
+      if (!API_URL) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, pillarSubColumns, members, submissions, pillarScores, boardPassword }));
+        } catch (e) {}
         return;
       }
+      if (!boardUnlocked || !boardPasswordSession) return; // الزوار مبيكتبوش غير عن طريق submit
+      syncDirty = true;
+      setSyncStatus("busy", "⏳ Saving…");
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(flushToServer, 900);
+    }
+
+    async function flushToServer() {
+      if (syncInFlight) { syncTimer = setTimeout(flushToServer, 500); return; }
+      if (!syncDirty) return;
+      syncInFlight = true; syncDirty = false;
       try {
-        if (showNotification) showToast("جاري تحميل أحدث بيانات الموقع...", "🔄");
-        let data = null;
-
-        if (isRunningInsideGoogleAppsScript()) {
-          const rawJson = await new Promise((resolve, reject) => {
-            window.google.script.run
-              .withSuccessHandler((res) => resolve(res))
-              .withFailureHandler((err) => reject(err))
-              .loadPortalStateServer();
-          });
-          data = rawJson ? JSON.parse(rawJson) : null;
-        } else if (isJsonBlobUrl(sheetWebhookUrl)) {
-          const res = await fetch(sheetWebhookUrl, {
-            headers: { "Accept": "application/json" }
-          });
-          data = await res.json();
-        } else if (isFirebaseUrl(sheetWebhookUrl)) {
-          const cleanBase = sheetWebhookUrl.replace(/\/+$/, "").replace(/\.json$/i, "");
-          const res = await fetch(`${cleanBase}/enactusPortalState.json?t=${Date.now()}`);
-          data = await res.json();
-        } else {
-          const sep = sheetWebhookUrl.includes("?") ? "&" : "?";
-          const res = await fetch(`${sheetWebhookUrl}${sep}action=getState&t=${Date.now()}`);
-          data = await res.json();
-        }
-
-        if (!data || data.empty) {
-          await pushFullStateToCloud(null);
-          if (showNotification) showToast("تم تهيئة وحفظ بيانات الموقع على السحابة بنجاح!", "☁️");
-          return;
-        }
-
-        if (Array.isArray(data.tasks) || Array.isArray(data.members) || Array.isArray(data.submissions)) {
-          if (Array.isArray(data.tasks) && data.tasks.length) tasks = data.tasks;
-          if (Array.isArray(data.members)) members = data.members;
-          if (data.pillarSubColumns) pillarSubColumns = data.pillarSubColumns;
-          if (data.pillarScores) pillarScores = data.pillarScores;
-          if (data.boardPassword) boardPassword = data.boardPassword;
-
-          if (Array.isArray(data.submissions)) {
-            data.submissions.forEach((remoteSub) => {
-              if (!remoteSub.taskId) return;
-              const idx = submissions.findIndex(
-                (s) =>
-                  s.taskId === remoteSub.taskId &&
-                  ((remoteSub.memberCode && s.memberCode === remoteSub.memberCode) ||
-                    (remoteSub.memberId && s.memberId === remoteSub.memberId))
-              );
-              if (idx >= 0) {
-                submissions[idx] = { ...submissions[idx], ...remoteSub };
-              } else {
-                submissions.push(remoteSub);
-              }
-            });
-          }
-        }
-
-        normalizePortalState();
-        saveState(false);
-        refreshAllSelectorsAndViews();
-        if (showNotification) showToast("تم تحديث ومزامنة كل الداتا واللينكات بنجاح!", "🟢");
-      } catch (err) {
-        if (showNotification) showToast("تعذر الاتصال بالرابط، تأكد من جعل الصلاحية Anyone", "!");
+        const r = await api({
+          action: "boardSave",
+          password: boardPasswordSession,
+          state: { tasks, pillarSubColumns, members, submissions, pillarScores }
+        });
+        if (!r.ok) throw new Error(r.error);
+        // نعتمد التسليمات المدموجة (ممكن أعضاء سلّموا في الوقت ده) بدون إعادة رسم
+        if (Array.isArray(r.submissions) && !syncDirty) submissions = r.submissions;
+        setSyncStatus("ok", "☁ Saved " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+      } catch (e) {
+        syncDirty = true;
+        setSyncStatus("err", "⚠ Save failed — retrying");
+        syncTimer = setTimeout(flushToServer, 4000);
+      } finally {
+        syncInFlight = false;
       }
     }
 
-    function isFirebaseUrl(url) {
-      return /firebaseio\.com|firebasedatabase\.app/i.test(url || "");
-    }
-
-    async function pushFullStateToCloud(optionalRecord = null) {
-      if (!sheetWebhookUrl) return;
-      const fullPortalState = getFullStateObject();
-      try {
-        if (isFirebaseUrl(sheetWebhookUrl)) {
-          const cleanBase = sheetWebhookUrl.replace(/\/+$/, "").replace(/\.json$/i, "");
-          await fetch(`${cleanBase}/enactusPortalState.json`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(fullPortalState)
-          });
-        } else {
-          await fetch(sheetWebhookUrl, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({
-              fullPortalState,
-              record: optionalRecord
-            })
-          });
-        }
-      } catch (e) {}
-    }
-
-    async function pullFullStateFromCloud(showNotification = true) {
-      if (!sheetWebhookUrl) {
-        if (showNotification) showToast("Connect a Cloud URL in Board Tab 6 first", "!");
-        return;
-      }
-      try {
-        if (showNotification) showToast("Loading latest website data...", "🔄");
-        let data = null;
-
-        if (isFirebaseUrl(sheetWebhookUrl)) {
-          const cleanBase = sheetWebhookUrl.replace(/\/+$/, "").replace(/\.json$/i, "");
-          const res = await fetch(`${cleanBase}/enactusPortalState.json?t=${Date.now()}`);
-          data = await res.json();
-        } else {
-          const res = await fetch(`${sheetWebhookUrl}?t=${Date.now()}`);
-          data = await res.json();
-        }
-
-        if (!data || data.empty) {
-          // First time connecting: push current state to initialize the cloud DB
-          await pushFullStateToCloud(null);
-          if (showNotification) showToast("Initialized Cloud Storage with your current portal data!", "☁️");
-          return;
-        }
-
-        // Case 1: Full Portal State JSON (Members, Tasks, Submissions, Pillar Scores)
-        if (Array.isArray(data.tasks) || Array.isArray(data.members) || Array.isArray(data.submissions)) {
-          if (Array.isArray(data.tasks) && data.tasks.length) tasks = data.tasks;
-          if (Array.isArray(data.members)) members = data.members;
-          if (data.pillarSubColumns) pillarSubColumns = data.pillarSubColumns;
-          if (data.pillarScores) pillarScores = data.pillarScores;
-          if (data.boardPassword) boardPassword = data.boardPassword;
-
-          if (Array.isArray(data.submissions)) {
-            // Merge submissions so no Drive link or grade is ever lost
-            data.submissions.forEach((remoteSub) => {
-              if (!remoteSub.taskId) return;
-              const idx = submissions.findIndex(
-                (s) =>
-                  s.taskId === remoteSub.taskId &&
-                  ((remoteSub.memberCode && s.memberCode === remoteSub.memberCode) ||
-                    (remoteSub.memberId && s.memberId === remoteSub.memberId))
-              );
-              if (idx >= 0) {
-                submissions[idx] = { ...submissions[idx], ...remoteSub };
-              } else {
-                submissions.push(remoteSub);
-              }
-            });
-          }
-        }
-
-        normalizePortalState();
-        saveState(false);
-        refreshAllSelectorsAndViews();
-        if (showNotification) showToast("All website data & Drive links synced!", "🟢");
-      } catch (err) {
-        if (showNotification) showToast("Could not reach Cloud URL. Verify permissions are set to Anyone.", "!");
-      }
+    async function refreshFromServer(silent) {
+      if (!API_URL || !boardPasswordSession) return;
+      if (syncDirty || syncInFlight) await flushToServer();
+      const r = await api({ action: "boardLoad", password: boardPasswordSession });
+      if (!r.ok) { showToast("Refresh failed", "✕"); return; }
+      const st = r.state;
+      tasks = st.tasks?.length ? st.tasks : tasks;
+      members = st.members || [];
+      submissions = st.submissions || [];
+      pillarScores = st.pillarScores || {};
+      if (st.pillarSubColumns && Object.keys(st.pillarSubColumns).length) pillarSubColumns = st.pillarSubColumns;
+      applyDefaultsAfterLoad();
+      refreshAllSelectorsAndViews();
+      renderBoardAllPanels();
+      setSyncStatus("ok", "☁ Synced");
+      if (!silent) showToast("Synced from Google Sheet", "☁");
     }
 
     // -----------------------------------------------------------------
@@ -1751,6 +1353,17 @@ function loadPortalStateServer() {
       if (testDeadlineLockActive || task.forceLocked) return true;
       const dl = new Date(task.deadlineISO).getTime();
       return !isNaN(dl) && Date.now() > dl;
+    }
+
+    function toggleTestDeadlineLock() {
+      testDeadlineLockActive = !testDeadlineLockActive;
+      const btn = document.getElementById("testLockBtn");
+      if (btn) {
+        btn.innerHTML = testDeadlineLockActive ? "<span>🔓 Restore Open</span>" : "<span>⚡ Test Lock</span>";
+      }
+      tickDeadlineClock();
+      updateSubmitSceneUI();
+      showToast(testDeadlineLockActive ? "Simulating Deadline Lockout" : "Restored Active Deadline");
     }
 
     function tickDeadlineClock() {
@@ -1852,6 +1465,7 @@ function loadPortalStateServer() {
         boardTaskSel.value = activeBoardGradeTaskId;
       }
 
+      // Member Dropdown in Submit Page shows Member Name ONLY (No Secret Code)
       const memDrop = document.getElementById("submitMemberDropdown");
       if (memDrop) {
         const currentMemId = memDrop.value;
@@ -1966,68 +1580,63 @@ function loadPortalStateServer() {
         return;
       }
 
-      const btn = document.getElementById("submitTaskBtn");
-      if (btn) btn.innerHTML = "<span>⏳ Saving to Website...</span>";
-
-      // Pull latest cloud state first so we don't overwrite another member's submission
-      if (sheetWebhookUrl) {
-        await pullFullStateFromCloud(false);
-      }
-
       const note = document.getElementById("submitNoteInput")?.value.trim() || "";
-      const nowStr = new Date().toISOString().slice(0, 16).replace("T", " ");
+      const btn = document.getElementById("submitTaskBtn");
+      if (btn) { btn.disabled = true; btn.classList.add("opacity-60"); }
 
-      let sub = submissions.find(
-        (s) =>
-          s.taskId === task.id &&
-          (s.memberId === member.id || s.memberCode === member.code)
-      );
-
-      if (sub) {
-        sub.driveLink = driveUrl;
-        sub.note = note;
-        sub.timestamp = nowStr;
-        sub.memberId = member.id;
-        sub.memberCode = member.code;
-        sub.memberName = member.name;
-      } else {
-        sub = {
-          refCode: "REF-" + Math.floor(1000 + Math.random() * 9000),
-          taskId: task.id,
-          memberId: member.id,
-          memberCode: member.code,
-          memberName: member.name,
-          driveLink: driveUrl,
-          note,
-          timestamp: nowStr,
-          score: null,
-          evaluator: "",
-          feedback: ""
-        };
-        submissions.push(sub);
+      let nowStr = new Date().toISOString().slice(0, 16).replace("T", " ");
+      let ok = false;
+      try {
+        if (API_URL) {
+          const r = await api({ action: "submit", taskId: task.id, memberId: member.id, driveLink: driveUrl, note });
+          if (!r.ok) {
+            const msgs = { locked: "Submissions are locked for this task", bad_link: "Invalid Google Drive link", busy: "Server busy — try again" };
+            showToast(msgs[r.error] || "Submission failed: " + r.error, "✕");
+            return;
+          }
+          nowStr = r.timestamp;
+          // نعكس التسليم محلياً عشان رسالة "تم التسليم قبل كده" تظهر
+          if (!submissions.some((x) => x.taskId === task.id && x.memberId === member.id)) {
+            submissions.push({ taskId: task.id, memberId: member.id, driveLink: "1" });
+          }
+        } else {
+          let sub = submissions.find((s) => s.taskId === task.id && (s.memberId === member.id || s.memberCode === member.code));
+          if (sub) {
+            Object.assign(sub, { driveLink: driveUrl, note, timestamp: nowStr, memberId: member.id, memberCode: member.code });
+          } else {
+            submissions.push({
+              refCode: "REF-" + Math.floor(1000 + Math.random() * 9000), taskId: task.id, memberId: member.id,
+              memberCode: member.code, driveLink: driveUrl, note, timestamp: nowStr, score: null, evaluator: "", feedback: ""
+            });
+          }
+          saveState();
+        }
+        ok = true;
+      } catch (e) {
+        showToast("Network error — your submission was NOT saved, try again", "✕");
+        return;
+      } finally {
+        if (btn) { btn.disabled = false; btn.classList.remove("opacity-60"); }
       }
+      if (!ok) return;
 
-      saveState(true, { ...sub, memberName: member.name });
-      if (btn) btn.innerHTML = "<span>🎬 Submit Task to Board</span>";
-
+      // Show Receipt without exposing Secret Code
       const receiptBox = document.getElementById("submissionReceiptBox");
       if (receiptBox) {
         document.getElementById("receiptMemberVal").textContent = member.name;
         document.getElementById("receiptTaskVal").textContent = task.title;
         document.getElementById("receiptTimeVal").textContent = nowStr;
-        document.getElementById("receiptStatusVal").textContent = sheetWebhookUrl ? "SAVED ON WEBSITE CLOUD ✓" : "SAVED ✓";
         receiptBox.classList.remove("hidden");
       }
 
       document.getElementById("submitDriveUrlInput").value = "";
       document.getElementById("submitNoteInput").value = "";
       handleSubmitMemberDropdown(member.id);
-      if (boardUnlocked) renderBoardAllPanels();
-      showToast(`Submission saved permanently for ${member.name}`);
+      showToast(`Submission saved for ${member.name}`);
     }
 
     // -----------------------------------------------------------------
-    // 5. SCENE 02: PRIVATE SECRET CODE LOOKUP
+    // 5. SCENE 02: PRIVATE SECRET CODE LOOKUP (SINGLE TASK GRADE)
     // -----------------------------------------------------------------
     function toggleLookupSecretCodeVisibility() {
       const input = document.getElementById("lookupMemberCodeInput");
@@ -2046,12 +1655,19 @@ function loadPortalStateServer() {
         return;
       }
 
-      if (sheetWebhookUrl) {
-        await pullFullStateFromCloud(false);
+      let member = null, task = null, sub = null;
+      if (API_URL) {
+        resBox.innerHTML = '<div class="text-center text-xs font-mono text-slate-400 p-5">⏳ Checking…</div>';
+        try {
+          const r = await api({ action: "grade", taskId, code: codeRaw });
+          if (r.ok) { member = r.member; task = r.task; sub = r.sub; }
+          else if (r.error !== "invalid_code") { showToast("Server error: " + r.error, "✕"); resBox.innerHTML = ""; return; }
+        } catch (e) { showToast("Network error — try again", "✕"); resBox.innerHTML = ""; return; }
+      } else {
+        member = members.find((m) => m.code.toUpperCase() === codeRaw);
+        task = tasks.find((t) => t.id === taskId);
+        if (member && task) sub = submissions.find((s) => s.taskId === task.id && (s.memberCode === member.code || s.memberId === member.id));
       }
-
-      const member = members.find((m) => m.code.toUpperCase() === codeRaw);
-      const task = tasks.find((t) => t.id === taskId);
 
       if (!member || !task) {
         resBox.innerHTML = `
@@ -2062,10 +1678,6 @@ function loadPortalStateServer() {
         `;
         return;
       }
-
-      const sub = submissions.find(
-        (s) => s.taskId === task.id && (s.memberCode === member.code || s.memberId === member.id)
-      );
 
       if (!sub || (!sub.driveLink && sub.score === null)) {
         resBox.innerHTML = `
@@ -2130,30 +1742,47 @@ function loadPortalStateServer() {
     // -----------------------------------------------------------------
     // 6. SCENE 03: BOARD PORTAL LOCK, TABS & SECURITY
     // -----------------------------------------------------------------
-    function unlockBoardPortal() {
+    async function unlockBoardPortal() {
       const passIn = document.getElementById("boardPasswordInput");
       if (!passIn) return;
-      if (passIn.value === boardPassword) {
-        boardUnlocked = true;
-        passIn.value = "";
-        document.getElementById("boardLockCard")?.classList.add("hidden");
-        document.getElementById("boardUnlockedSuite")?.classList.remove("hidden");
-        renderBoardAllPanels();
-        if (sheetWebhookUrl) pullFullStateFromCloud(false);
-        showToast("Board Portal Unlocked", "🔓");
+      const pw = passIn.value;
+      if (API_URL) {
+        try {
+          showToast("Checking password…", "⏳");
+          const r = await api({ action: "boardLoad", password: pw });
+          if (!r.ok) {
+            showToast(r.error === "too_many_attempts" ? "Too many attempts — wait 10 minutes" : "Incorrect Board Password", "✕");
+            return;
+          }
+          boardPasswordSession = pw;
+          const st = r.state;
+          tasks = st.tasks?.length ? st.tasks : tasks;
+          members = st.members || [];
+          submissions = st.submissions || [];
+          pillarScores = st.pillarScores || {};
+          pillarSubColumns = st.pillarSubColumns || {};
+          applyDefaultsAfterLoad();
+          boardUnlocked = true;
+          if (!st.configured) { syncDirty = true; flushToServer(); } // أول مرة: نكتب الإعدادات الافتراضية في الشيت
+        } catch (e) {
+          showToast("Could not reach the server", "✕");
+          return;
+        }
       } else {
-        showToast("Incorrect Board Password", "✕");
+        if (pw !== boardPassword) { showToast("Incorrect Board Password", "✕"); return; }
+        boardUnlocked = true;
       }
-    }
-
-    function quickUnlockDemo() {
-      const passIn = document.getElementById("boardPasswordInput");
-      if (passIn) passIn.value = boardPassword;
-      unlockBoardPortal();
+      passIn.value = "";
+      document.getElementById("boardLockCard")?.classList.add("hidden");
+      document.getElementById("boardUnlockedSuite")?.classList.remove("hidden");
+      refreshAllSelectorsAndViews();
+      renderBoardAllPanels();
+      showToast("Board Portal Unlocked", "🔓");
     }
 
     function lockBoardPortal() {
       boardUnlocked = false;
+      boardPasswordSession = "";
       document.getElementById("boardUnlockedSuite")?.classList.add("hidden");
       document.getElementById("boardLockCard")?.classList.remove("hidden");
       showToast("Board Portal Locked", "🔒");
@@ -2185,12 +1814,12 @@ function loadPortalStateServer() {
       renderRosterTable();
     }
 
-    function updateBoardPassword() {
+    async function updateBoardPassword() {
       const oldP = document.getElementById("oldPassInput")?.value || "";
       const newP = document.getElementById("newPassInput")?.value.trim() || "";
       const confP = document.getElementById("confirmPassInput")?.value.trim() || "";
 
-      if (oldP !== boardPassword) {
+      if (oldP !== (API_URL ? boardPasswordSession : boardPassword)) {
         showToast("Current password is incorrect", "✕");
         return;
       }
@@ -2203,17 +1832,20 @@ function loadPortalStateServer() {
         return;
       }
 
-      boardPassword = newP;
+      if (API_URL) {
+        try {
+          const r = await api({ action: "changePassword", password: boardPasswordSession, newPassword: newP });
+          if (!r.ok) { showToast("Could not change password: " + r.error, "✕"); return; }
+          boardPasswordSession = newP;
+        } catch (e) { showToast("Network error — password NOT changed", "✕"); return; }
+      } else {
+        boardPassword = newP;
+        saveState();
+      }
       document.getElementById("oldPassInput").value = "";
       document.getElementById("newPassInput").value = "";
       document.getElementById("confirmPassInput").value = "";
-      saveState(true);
-      showToast("Board password updated & synced", "🔑");
-    }
-
-    function copyAppsScriptCode() {
-      const code = document.getElementById("appsScriptCodeBlock")?.textContent || "";
-      copyTextSafe(code, "Full Cloud Google Apps Script copied");
+      showToast("Board password updated successfully", "🔑");
     }
 
     // -----------------------------------------------------------------
@@ -2375,7 +2007,6 @@ function loadPortalStateServer() {
           taskId,
           memberId: member.id,
           memberCode: member.code,
-          memberName: member.name,
           driveLink: linkVal,
           note: "",
           timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
@@ -2389,12 +2020,11 @@ function loadPortalStateServer() {
         sub.score = scoreRaw === "" ? null : Number(scoreRaw);
         sub.evaluator = evaluator;
         sub.feedback = fbVal;
-        sub.memberName = member.name;
       }
 
-      saveState(true, { ...sub, memberName: member.name });
+      saveState();
       renderBoardAllPanels();
-      showToast(`Saved & synced evaluation for ${member.name}`);
+      showToast(`Saved evaluation for ${member.name}`);
     }
 
     // -----------------------------------------------------------------
@@ -2459,6 +2089,21 @@ function loadPortalStateServer() {
         .join("");
     }
 
+    function addBulkMembersToRoster() {
+      const ta = document.getElementById("rosterBulkNames");
+      const names = (ta?.value || "").split(/\r?\n/).map((n) => n.trim()).filter(Boolean);
+      if (!names.length) { showToast("Paste at least one name", "!"); return; }
+      names.forEach((name, i) => {
+        members.push({ id: `MEM-${Date.now().toString().slice(-6)}${i}`, code: generateUniqueSecretCode(), name, team: "Video" });
+      });
+      ta.value = "";
+      fillRandomNewMemberCode();
+      saveState();
+      refreshAllSelectorsAndViews();
+      renderRosterTable();
+      showToast(`Added ${names.length} members`);
+    }
+
     function addNewMemberToRoster() {
       const nameIn = document.getElementById("rosterNewName");
       const codeIn = document.getElementById("rosterNewCode");
@@ -2478,9 +2123,9 @@ function loadPortalStateServer() {
       if (nameIn) nameIn.value = "";
       fillRandomNewMemberCode();
 
-      saveState(true);
+      saveState();
       refreshAllSelectorsAndViews();
-      showToast(`Added ${name} (${code}) & saved to website`);
+      showToast(`Added ${name} (${code})`);
     }
 
     function copySingleMemberCodeMessage(memberId) {
@@ -2511,6 +2156,7 @@ function loadPortalStateServer() {
       const oldCode = member.code;
       member.code = clean;
 
+      // Keep submissions & pillarScores linked to the updated code
       submissions.forEach((s) => {
         if (s.memberId === member.id || s.memberCode === oldCode) {
           s.memberId = member.id;
@@ -2522,7 +2168,7 @@ function loadPortalStateServer() {
         delete pillarScores[oldCode];
       }
 
-      saveState(true);
+      saveState();
       refreshAllSelectorsAndViews();
       showToast(`Updated private code for ${member.name} to ${clean}`);
     }
@@ -2543,7 +2189,7 @@ function loadPortalStateServer() {
           delete pillarScores[oldCode];
         }
       });
-      saveState(true);
+      saveState();
       refreshAllSelectorsAndViews();
       showToast("Generated new random Secret Codes for all members", "🎲");
     }
@@ -2551,7 +2197,7 @@ function loadPortalStateServer() {
     function removeMemberFromRoster(memberId) {
       const target = members.find((m) => m.id === memberId || m.code === memberId);
       members = members.filter((m) => m.id !== memberId && m.code !== memberId);
-      saveState(true);
+      saveState();
       refreshAllSelectorsAndViews();
       showToast(`Removed ${target ? target.name : memberId}`);
     }
@@ -2569,6 +2215,7 @@ function loadPortalStateServer() {
       if (!pillar) return;
 
       if (pillar.isTasksPillar) {
+        // Add a new Task directly into Task Quality and Reliability (20%)
         const nextNum = tasks.length + 1;
         const newId = `TASK-${String(nextNum).padStart(2, "0")}-${Date.now().toString().slice(-2)}`;
         const newTitle = `Task ${String(nextNum).padStart(2, "0")}: New Task`;
@@ -2580,7 +2227,7 @@ function loadPortalStateServer() {
           deadlineISO: "2026-12-20T23:59",
           forceLocked: false
         });
-        saveState(true);
+        saveState();
         refreshAllSelectorsAndViews();
         showToast(`Added "${newTitle}" under Task Quality & Reliability (20%)`);
         return;
@@ -2596,7 +2243,7 @@ function loadPortalStateServer() {
         maxScore: 100
       };
       pillarSubColumns[pillarId].push(newSub);
-      saveState(true);
+      saveState();
       renderBoardAllPanels();
       showToast(`Added "${newSub.title}" inside ${pillar.title} (${pillar.weight100}%)`);
     }
@@ -2606,7 +2253,7 @@ function loadPortalStateServer() {
       const col = list.find((c) => c.id === subColId);
       if (!col) return;
       col.title = newTitle.trim() || "Evaluation Item";
-      saveState(true);
+      saveState();
       renderEvaluationMatrix();
       showToast(`Renamed column to "${col.title}"`);
     }
@@ -2621,7 +2268,7 @@ function loadPortalStateServer() {
         return;
       }
       col.maxScore = parsed;
-      saveState(true);
+      saveState();
       renderBoardAllPanels();
       showToast(`Updated max score for "${col.title}" to ${parsed}`);
     }
@@ -2635,7 +2282,7 @@ function loadPortalStateServer() {
           delete pillarScores[memberCode][subColId];
         }
       });
-      saveState(true);
+      saveState();
       renderBoardAllPanels();
       showToast(`Removed "${target ? target.title : subColId}"`);
     }
@@ -2645,7 +2292,7 @@ function loadPortalStateServer() {
       if (!task) return;
       if (newTitle.trim()) {
         task.title = newTitle.trim();
-        saveState(true);
+        saveState();
         refreshAllSelectorsAndViews();
         showToast(`Renamed task to "${task.title}"`);
       }
@@ -2657,7 +2304,7 @@ function loadPortalStateServer() {
       const parsed = Number(newMax);
       if (!isNaN(parsed) && parsed > 0) {
         task.maxScore = parsed;
-        saveState(true);
+        saveState();
         refreshAllSelectorsAndViews();
         showToast(`Updated task max score to ${parsed}`);
       }
@@ -2682,7 +2329,6 @@ function loadPortalStateServer() {
           taskId,
           memberId: member ? member.id : "",
           memberCode,
-          memberName: member ? member.name : "",
           driveLink: "",
           note: "",
           timestamp: "",
@@ -2695,7 +2341,7 @@ function loadPortalStateServer() {
         sub.score = clean === "" ? null : Number(clean);
       }
 
-      saveState(true, member ? { ...sub, memberName: member.name } : null);
+      saveState();
       renderEvaluationMatrix();
       renderBoardRankingsDashboard();
     }
@@ -2715,17 +2361,18 @@ function loadPortalStateServer() {
       if (!pillarScores[memberCode]) pillarScores[memberCode] = {};
       pillarScores[memberCode][subColId] = clean === "" ? null : Number(clean);
 
-      saveState(true);
+      saveState();
       renderEvaluationMatrix();
       renderBoardRankingsDashboard();
     }
 
+    // Calculate each member's Total Score per Pillar + Weighted 100% Video Score + 45% Official Video Share
     function calculateAllMemberStats() {
       const stats = members.map((m) => {
-        const pillarTotals = {};
+        const pillarTotals = {}; // { [pillarId]: { rawSum, maxSum, pct0to1, earnedOf100, weight100, earnedOf45, maxOf45 } }
         const taskBreakdown = {};
 
-        let totalVideo100 = 0;
+        let totalVideo100 = 0; // Sum of earnedOf100 across the 6 pillars (max 100%)
         let grandRawSum = 0;
         let grandMaxSum = 0;
 
@@ -2825,6 +2472,7 @@ function loadPortalStateServer() {
         };
       });
 
+      // Overall Rank based on Final Video Score
       const byOverall = [...stats].sort(
         (a, b) => b.weightedTotalPct100 - a.weightedTotalPct100 || b.grandTotal - a.grandTotal
       );
@@ -2833,6 +2481,7 @@ function loadPortalStateServer() {
         if (target) target.overallRank = idx + 1;
       });
 
+      // Tasks Pillar Rank
       const byTasks = [...stats].sort(
         (a, b) =>
           (b.pillarTotals["PIL-TASKS"]?.earnedOf100 || 0) -
@@ -2864,6 +2513,7 @@ function loadPortalStateServer() {
         }
       }
 
+      // 1. Render the 6 Fixed Pillar Nodes in the Mind Map
       gridEl.innerHTML = FIXED_PILLARS.map((p) => {
         const isSelected = activeMindMapPillarId === p.id;
         const subCount = p.isTasksPillar ? tasks.length : (pillarSubColumns[p.id] || []).length;
@@ -2904,6 +2554,7 @@ function loadPortalStateServer() {
         `;
       }).join("");
 
+      // 2. Render Either MASTER 6-PILLARS SUMMARY TABLE or SELECTED PILLAR BRANCH TABLE
       if (activeMindMapPillarId === "ALL") {
         if (toolbarEl) {
           toolbarEl.innerHTML = `
@@ -3002,6 +2653,7 @@ function loadPortalStateServer() {
         return;
       }
 
+      // 3. Render Drill-Down Sub-Columns Table for the Active Pillar
       const activePillar = FIXED_PILLARS.find((p) => p.id === activeMindMapPillarId) || FIXED_PILLARS[0];
       const sh45 = Number(((activePillar.weight100 / 100) * VIDEO_OFFICIAL_SHARE).toFixed(2));
 
@@ -3031,6 +2683,7 @@ function loadPortalStateServer() {
       }
 
       if (activePillar.isTasksPillar) {
+        // Render Tasks Branch Table
         let headHtml = `
           <tr class="bg-canvas-elevated text-slate-200 border-b border-canvas-border">
             <th class="py-3 px-3 font-mono whitespace-nowrap sticky left-0 bg-canvas-elevated z-10">Code</th>
@@ -3143,6 +2796,7 @@ function loadPortalStateServer() {
         return;
       }
 
+      // Render Non-Task Pillar Sub-Columns Table (Problem Solving, Collaboration, Alignment, Growth Mindset, Leadership)
       const subCols = pillarSubColumns[activePillar.id] || [];
       let headHtml = `
         <tr class="bg-canvas-elevated text-slate-200 border-b border-canvas-border">
@@ -3203,7 +2857,7 @@ function loadPortalStateServer() {
             <tr class="hover:bg-canvas-elevated/40 transition">
               <td class="py-2.5 px-3 font-mono font-bold text-canvas-gold sticky left-0 bg-canvas-panel">${st.code}</td>
               <td class="py-2.5 px-3 font-bold text-white whitespace-nowrap">${st.name}</td>
-            `;
+          `;
 
           subCols.forEach((scCol) => {
             const val =
@@ -3243,7 +2897,7 @@ function loadPortalStateServer() {
     }
 
     // -----------------------------------------------------------------
-    // 10. BOARD SUB-TAB 3: LOCKED RANKINGS DASHBOARD
+    // 10. BOARD SUB-TAB 3: LOCKED RANKINGS DASHBOARD (BY PILLAR OR OVERALL)
     // -----------------------------------------------------------------
     function populateRankingSortOptions() {
       const sel = document.getElementById("rankingSortSelector");
@@ -3309,6 +2963,7 @@ function loadPortalStateServer() {
           b.grandTotal - a.grandTotal
       );
 
+      // Render Top 3 Podium
       const top3 = sorted.slice(0, 3);
       const medals = ["🥇 RANK #1", "🥈 RANK #2", "🥉 RANK #3"];
       const borderColors = ["border-canvas-gold", "border-canvas-blue/60", "border-amber-600/60"];
@@ -3372,7 +3027,7 @@ function loadPortalStateServer() {
     }
 
     // -----------------------------------------------------------------
-    // 11. BOARD SUB-TAB 4: UNLIMITED TASKS MANAGER & CLOUD WEBHOOK SAVE
+    // 11. BOARD SUB-TAB 4: UNLIMITED TASKS MANAGER
     // -----------------------------------------------------------------
     function createNewTaskItem() {
       const titleIn = document.getElementById("newTaskTitleInput");
@@ -3407,9 +3062,9 @@ function loadPortalStateServer() {
       activeSubmitTaskId = newId;
       activeBoardGradeTaskId = newId;
 
-      saveState(true);
+      saveState();
       refreshAllSelectorsAndViews();
-      showToast(`Created ${title} & saved to website`);
+      showToast(`Created ${title} (Score Out Of: ${maxScore})`);
     }
 
     function renderUnlimitedTasksManager() {
@@ -3435,7 +3090,7 @@ function loadPortalStateServer() {
                   <button onclick="toggleTaskForceLock('${t.id}')" class="text-xs font-mono font-bold px-3 py-1 rounded-lg border transition ${
                     t.forceLocked
                       ? "bg-red-500/20 text-red-300 border-red-500/40"
-                      : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                      : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                   }">
                     ${t.forceLocked ? "🔒 Locked (Click to Reopen)" : "● Open (Click to Force Lock)"}
                   </button>
@@ -3491,16 +3146,16 @@ function loadPortalStateServer() {
       task.maxScore = maxScore;
       if (deadlineISO) task.deadlineISO = deadlineISO;
 
-      saveState(true);
+      saveState();
       refreshAllSelectorsAndViews();
-      showToast(`Task updated & saved to website`);
+      showToast(`Task updated (Score Out Of: ${task.maxScore})`);
     }
 
     function toggleTaskForceLock(taskId) {
       const task = tasks.find((t) => t.id === taskId);
       if (!task) return;
       task.forceLocked = !task.forceLocked;
-      saveState(true);
+      saveState();
       refreshAllSelectorsAndViews();
       showToast(task.forceLocked ? "Task Force-Locked" : "Task Reopened");
     }
@@ -3510,58 +3165,9 @@ function loadPortalStateServer() {
       tasks = tasks.filter((t) => t.id !== taskId);
       if (activeSubmitTaskId === taskId) activeSubmitTaskId = tasks[0].id;
       if (activeBoardGradeTaskId === taskId) activeBoardGradeTaskId = tasks[0].id;
-      saveState(true);
+      saveState();
       refreshAllSelectorsAndViews();
       showToast("Task deleted");
-    }
-
-    async function saveWebhookUrl() {
-      sheetWebhookUrl = document.getElementById("sheetWebhookInput").value.trim();
-      saveState(false);
-      updateCloudSyncBadge();
-      if (sheetWebhookUrl) {
-        await pullFullStateFromCloud(true);
-      } else {
-        showToast("Switched to Local Storage mode");
-      }
-    }
-
-    function downloadPortalFileForMembers() {
-      const payload = {
-        ...getFullStateObject(),
-        sheetWebhookUrl
-      };
-
-      const clone = document.documentElement.cloneNode(true);
-      const bakedScript = clone.querySelector("#portal-baked-state");
-      if (bakedScript) {
-        bakedScript.textContent = JSON.stringify(payload);
-      }
-
-      const scSubmit = clone.querySelector("#scene-submit");
-      const scGrade = clone.querySelector("#scene-grade");
-      const scBoard = clone.querySelector("#scene-board");
-      if (scSubmit) scSubmit.classList.remove("hidden");
-      if (scGrade) scGrade.classList.add("hidden");
-      if (scBoard) scBoard.classList.add("hidden");
-
-      const lockCard = clone.querySelector("#boardLockCard");
-      const unlockedSuite = clone.querySelector("#boardUnlockedSuite");
-      if (lockCard) lockCard.classList.remove("hidden");
-      if (unlockedSuite) unlockedSuite.classList.add("hidden");
-
-      const htmlString = "<!DOCTYPE html>\n" + clone.outerHTML;
-      const blob = new Blob([htmlString], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "index.html";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showToast("Downloaded index.html with permanent Cloud Sync baked inside!", "💾");
     }
 
     // -----------------------------------------------------------------
@@ -3587,6 +3193,7 @@ function loadPortalStateServer() {
       URL.revokeObjectURL(url);
     }
 
+    // 1) Export Currently Selected Task Submissions, Drive Links, Scores & Feedback
     function exportSingleTaskSubmissionsExcel() {
       const task = tasks.find((t) => t.id === activeBoardGradeTaskId) || tasks[0];
       if (!task) return;
@@ -3631,6 +3238,7 @@ function loadPortalStateServer() {
       showToast(`Exported ${task.title} & Drive Links to Excel`, "📊");
     }
 
+    // 2) Export All Tasks Submissions, Drive Links, Scores & Feedback
     function exportAllTasksSubmissionsExcel() {
       const headers = [
         "Member Name",
@@ -3676,6 +3284,7 @@ function loadPortalStateServer() {
       showToast("Exported All Tasks & Google Drive Links to Excel", "📊");
     }
 
+    // 3) Export Currently Opened Mind Map Pillar (Alone)
     function exportActivePillarExcel() {
       if (activeMindMapPillarId === "ALL") {
         exportFullMatrixCSV();
@@ -3725,6 +3334,7 @@ function loadPortalStateServer() {
       showToast(`Exported ${activePillar.title} to Excel`, "📊");
     }
 
+    // 4) Export 6-Pillars Summary Matrix
     function exportFullMatrixCSV() {
       const stats = calculateAllMemberStats();
       const headers = [
@@ -3753,6 +3363,7 @@ function loadPortalStateServer() {
       showToast("Exported 6-Pillars Summary to Excel", "📊");
     }
 
+    // 5) Export Rankings Leaderboard
     function exportRankingsExcel() {
       const stats = calculateAllMemberStats();
       const sorted = [...stats].sort(
@@ -3781,6 +3392,7 @@ function loadPortalStateServer() {
       showToast("Exported Rankings Leaderboard to Excel", "🏆");
     }
 
+    // 6) Export Team Roster & Private Secret Codes
     function exportRosterCodesExcel() {
       const headers = ["#", "Member Full Name", "Team", "Private Secret Code"];
       const rows = members.map((m, idx) => [idx + 1, m.name, "Video", m.code]);
@@ -3788,6 +3400,7 @@ function loadPortalStateServer() {
       showToast("Exported Team Roster & Secret Codes to Excel", "👥");
     }
 
+    // 7) Export EVERYTHING All-in-One Master Excel (Roster + All Tasks & Drive Links + All Sub-Columns + 6 Pillars + Totals & Rank)
     function exportEverythingMasterExcel() {
       const stats = calculateAllMemberStats();
       const headers = [
@@ -3799,6 +3412,7 @@ function loadPortalStateServer() {
         "Official Video Share (45%)"
       ];
 
+      // Add all Tasks (Score + Drive Link + Feedback + Timestamp)
       tasks.forEach((t) => {
         headers.push(
           `${t.title} - Score (/${t.maxScore})`,
@@ -3809,6 +3423,7 @@ function loadPortalStateServer() {
       });
       headers.push("TASK QUALITY AND RELIABILITY Total", "TASK QUALITY AND RELIABILITY (20%)");
 
+      // Add all other 5 Pillars and their Sub-Columns
       FIXED_PILLARS.filter((p) => !p.isTasksPillar).forEach((p) => {
         const subCols = pillarSubColumns[p.id] || [];
         subCols.forEach((c) => {
@@ -3881,6 +3496,7 @@ function loadPortalStateServer() {
         height = canvas.height = window.innerHeight;
       });
 
+      // Track Mouse for Spotlight, Card Borders & Parallax
       window.addEventListener("mousemove", (e) => {
         targetX = e.clientX;
         targetY = e.clientY;
@@ -3888,12 +3504,14 @@ function loadPortalStateServer() {
         document.documentElement.style.setProperty("--cursor-x", `${e.clientX}px`);
         document.documentElement.style.setProperty("--cursor-y", `${e.clientY}px`);
 
+        // Update card glow coordinates
         document.querySelectorAll(".vf-frame").forEach((card) => {
           const rect = card.getBoundingClientRect();
           card.style.setProperty("--card-mouse-x", `${e.clientX - rect.left}px`);
           card.style.setProperty("--card-mouse-y", `${e.clientY - rect.top}px`);
         });
 
+        // Subtle Parallax on Camera & Origami Watermarks
         const normX = (e.clientX / width - 0.5) * 2;
         const normY = (e.clientY / height - 0.5) * 2;
         const camRight = document.getElementById("parallaxCameraRight");
@@ -3906,6 +3524,7 @@ function loadPortalStateServer() {
         }
       });
 
+      // Create Floating Cinema Bokeh Particles (Enactus Gold & Cinema Blue)
       const particleCount = 34;
       const particles = Array.from({ length: particleCount }, (_, i) => ({
         x: Math.random() * width,
@@ -3923,6 +3542,7 @@ function loadPortalStateServer() {
 
         ctx.clearRect(0, 0, width, height);
 
+        // 1. Ambient Cinema Studio Glows
         const gradGold = ctx.createRadialGradient(
           width * 0.18 + (mouseX - width / 2) * 0.05,
           height * 0.22 + (mouseY - height / 2) * 0.05,
@@ -3949,6 +3569,7 @@ function loadPortalStateServer() {
         ctx.fillStyle = gradBlue;
         ctx.fillRect(0, 0, width, height);
 
+        // 2. Parallax Perspective Grid
         const gridSize = 44;
         const offsetX = ((mouseX - width / 2) * -0.03) % gridSize;
         const offsetY = ((mouseY - height / 2) * -0.03) % gridSize;
@@ -3966,6 +3587,7 @@ function loadPortalStateServer() {
         }
         ctx.stroke();
 
+        // 3. Floating Bokeh Particles & Mouse Constellation Lines
         particles.forEach((p) => {
           p.x += p.vx;
           p.y += p.vy;
@@ -3979,6 +3601,7 @@ function loadPortalStateServer() {
           const dy = mouseY - p.y;
           const dist = Math.hypot(dx, dy);
 
+          // Draw subtle connection line when near cursor
           if (dist < 170) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
@@ -3987,7 +3610,7 @@ function loadPortalStateServer() {
               p.color === "#FFC222"
                 ? `rgba(255, 194, 34, ${(1 - dist / 170) * 0.22})`
                 : `rgba(56, 189, 248, ${(1 - dist / 170) * 0.22})`;
-            lineWidth = 1;
+            ctx.lineWidth = 1;
             ctx.stroke();
           }
 
